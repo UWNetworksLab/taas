@@ -118,7 +118,7 @@ static int proc_service_table_read(char *page, char **start,
         static char *buf = NULL;
         static size_t buflen = 0;
 
-        LOG_CRIT("Service table read\n");
+        printk("Service table read\n");
 
         return proc_generic_read(&buf, &buflen, page, start, off, 
                                  count, eof, data,
