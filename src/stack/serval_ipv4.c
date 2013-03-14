@@ -49,7 +49,7 @@ int serval_ipv4_rcv(struct sk_buff *skb)
         case IPPROTO_SERVAL:
                 break;
 	case IPPROTO_ICMP:
-		LOG_DBG("icmp packet\n");
+		PRINTK("icmp packet\n");
 	case IPPROTO_UDP:
 	case IPPROTO_TCP:
         default:
