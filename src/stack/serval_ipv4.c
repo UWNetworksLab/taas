@@ -57,6 +57,8 @@ int serval_ipv4_rcv(struct sk_buff *skb)
                 goto out;
 	}
 
+        PRINTK("serval packet\n");
+
 #if defined(ENABLE_DEBUG)
         {
                 char srcstr[18], dststr[18];
