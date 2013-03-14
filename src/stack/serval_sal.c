@@ -3388,6 +3388,8 @@ int serval_sal_rcv(struct sk_buff *skb)
         unsigned int sal_length;
         int err = 0;
         
+        PRINTK("serval_sal_rcv: %p\n", __builtin_return_address(0));
+
 #if defined(ENABLE_DEBUG)
         {
                 struct iphdr *iph = ip_hdr(skb);
