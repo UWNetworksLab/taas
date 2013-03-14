@@ -3064,8 +3064,8 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
 
         *sk = NULL;
 
-        LOG_CRIT("Resolve or demux inbound packet on serviceID %s\n", 
-                service_id_to_str(srvid));
+        PRINTK("Resolve or demux inbound packet on serviceID %s\n", 
+               service_id_to_str(srvid));
 
         /* Match on the highest priority srvid rule, even if it's not
          * the sock TODO - use flags/prefix in resolution This should

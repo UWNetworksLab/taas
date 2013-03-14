@@ -74,4 +74,10 @@ const char *print_ssk(struct sock *sk, char *buf, size_t buflen);
 
 #endif /* ENABLE_DEBUG */
 
+#ifdef OS_LINUX_KERNEL
+#define PRINTK(fmt, ...)  printk(fmt, ##__VA_ARGS__)
+#else
+#define PRINTK(fmt, ...)
+#endif
+
 #endif /* __DEBUG_H_ */
