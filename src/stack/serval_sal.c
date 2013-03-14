@@ -3064,7 +3064,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
 
         *sk = NULL;
 
-        printk("Resolve or demux inbound packet on serviceID %s\n", 
+        LOG_INF("Resolve or demux inbound packet on serviceID %s\n", 
                 service_id_to_str(srvid));
 
         /* Match on the highest priority srvid rule, even if it's not
