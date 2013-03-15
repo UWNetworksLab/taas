@@ -91,6 +91,7 @@ struct sal_context {
         struct sal_address_ext *addr_ext;
         struct sal_service_ext *srv_ext[2];
         struct sal_source_ext *src_ext;
+        struct sal_taas_ext *taas_ext;
 };
 
 #if defined(OS_LINUX_KERNEL)
@@ -112,6 +113,7 @@ static size_t min_ext_length[] = {
         [SAL_SERVICE_EXT] = sizeof(struct sal_service_ext),
         [SAL_ADDRESS_EXT] = sizeof(struct sal_address_ext),
         [SAL_SOURCE_EXT] = sizeof(struct sal_source_ext),
+        [SAL_TAAS_EXT] = sizeof(struct sal_taas_ext),
 };
 
 static size_t max_ext_length[] = {
@@ -120,6 +122,7 @@ static size_t max_ext_length[] = {
         [SAL_SERVICE_EXT] = sizeof(struct sal_service_ext),
         [SAL_ADDRESS_EXT] = sizeof(struct sal_address_ext),
         [SAL_SOURCE_EXT] = SAL_SOURCE_EXT_MAX_LEN,
+        [SAL_TAAS_EXT] = sizeof(struct sal_taas_ext),
 };
 
 #if defined(ENABLE_DEBUG)
@@ -130,6 +133,7 @@ static char* sal_ext_name[] = {
         [SAL_SERVICE_EXT] = "SERVICE",
         [SAL_ADDRESS_EXT] = "ADDRESS",
         [SAL_SOURCE_EXT] =  "SOURCE",
+        [SAL_TAAS_EXT] =  "TAAS",
 };
 
 static int print_base_hdr(struct sal_hdr *sh, char *buf, int buflen)
@@ -186,6 +190,14 @@ static int print_address_ext(struct sal_ext *xt, char *buf, int buflen)
         return 0;
 }
 
+static int print_taas_ext(struct sal_ext *xt, char *buf, int buflen)
+{
+        /* struct sal_taas_ext *dxt = 
+           (struct sal_taas_ext *)xt; */
+                
+        return 0;
+}
+
 static int print_source_ext(struct sal_ext *xt, char *buf, int buflen)
 {
         struct sal_source_ext *sxt = 
@@ -216,6 +228,7 @@ static print_ext_func_t print_ext_func[] = {
         [SAL_SERVICE_EXT] = &print_service_ext,
         [SAL_ADDRESS_EXT] = &print_address_ext,
         [SAL_SOURCE_EXT] = &print_source_ext,
+        [SAL_TAAS_EXT] = &print_taas_ext,
 };
 
 static int print_ext(struct sal_ext *xt, char *buf, int buflen)
@@ -353,6 +366,15 @@ static int parse_address_ext(struct sal_ext *ext,
         return ext_len;
 }
 
+static int parse_taas_ext(struct sal_ext *ext, 
+                             uint16_t ext_len,
+                             struct sk_buff *skb,
+                             struct sal_context *ctx)
+{
+        PRINTK("TaaS extension support not implemented\n");
+        return ext_len;
+}
+
 
 static int parse_source_ext(struct sal_ext *ext, 
                             uint16_t ext_len,
@@ -399,6 +421,7 @@ static parse_ext_func_t parse_ext_func[] = {
         [SAL_SERVICE_EXT] = &parse_service_ext,
         [SAL_ADDRESS_EXT] = &parse_address_ext,
         [SAL_SOURCE_EXT] = &parse_source_ext,
+        [SAL_TAAS_EXT] = &parse_taas_ext,
 };
 
 static inline int parse_ext(struct sal_ext *ext, struct sk_buff *skb,
@@ -1699,7 +1722,7 @@ static int serval_sal_send_synack(struct sock *sk,
                 struct sal_source_ext *sxt;
                 ext_len = ctx->src_ext->ext_length;
 
-                LOG_DBG("Adding SOURCE ext to response\n");
+                PRINTK("Adding SOURCE ext to response\n");
 
                 /*
                   The SYN had a source extension, which means we were
@@ -3388,7 +3411,7 @@ int serval_sal_rcv(struct sk_buff *skb)
         unsigned int sal_length;
         int err = 0;
         
-        PRINTK("serval_sal_rcv: %p\n", __builtin_return_address(0));
+        /* PRINTK("serval_sal_rcv: %p\n", __builtin_return_address(0)); */
 
 #if defined(ENABLE_DEBUG)
         {
@@ -3403,7 +3426,7 @@ int serval_sal_rcv(struct sk_buff *skb)
 #endif
 
         if (skb->len < SAL_HEADER_LEN) {
-                LOG_DBG("skb length too short (%u bytes)\n", 
+                PRINTK("skb length too short (%u bytes)\n", 
                         skb->len);
                 goto drop;
         }
@@ -3415,8 +3438,7 @@ int serval_sal_rcv(struct sk_buff *skb)
          * migth be paged. This function call will also linearize the
          * requested length. */
         if (!pskb_may_pull(skb, SAL_HEADER_LEN)) {
-                LOG_DBG("Cannot pull base SAL header\n",
-                        SAL_HEADER_LEN);
+                PRINTK("Cannot pull base SAL header\n");
                 goto drop;
         }
         
@@ -3427,7 +3449,7 @@ int serval_sal_rcv(struct sk_buff *skb)
                 /* There are extensions, so we need to check that we
                  * can pull more than the base header */
                 if (!pskb_may_pull(skb, sal_length)) {
-                        LOG_DBG("Cannot pull %u bytes SAL header\n",
+                        PRINTK("Cannot pull %u bytes SAL header\n",
                                 sal_length);
                         goto drop;
                 }
@@ -3435,19 +3457,20 @@ int serval_sal_rcv(struct sk_buff *skb)
 
         /* Ok, we are ready to parse the full header. */       
         if (serval_sal_parse_hdr(skb, &ctx, SAL_PARSE_ALL)) {
-                LOG_DBG("Bad Serval header %s\n",
+                PRINTK("Bad Serval header %s\n",
                         ctx.hdr ? sal_hdr_to_str(ctx.hdr) : "NULL");
                 goto drop;
         }
         
         if (unlikely(serval_sal_csum(ctx.hdr, ctx.length))) {
-                LOG_DBG("SAL checksum error!\n");
+                PRINTK("SAL checksum error!\n");
                 goto drop;
         }       
 
         sk = serval_sal_demux_flow(skb, &ctx);
         
         if (!sk) {
+                PRINTK("No flow, resolving on serviceID\n");
                 /* Resolve on serviceID */
                 err = serval_sal_resolve(skb, &ctx, &sk);
                 
@@ -3851,6 +3874,21 @@ static inline int serval_sal_add_service_ext(struct sock *sk,
         return SAL_SERVICE_EXT_LEN;
 }
 
+static inline int serval_sal_add_taas_ext(struct sock *sk, 
+                                          struct sk_buff *skb,
+                                          uint64_t authenticator)
+{
+        struct sal_taas_ext *taas_ext;
+
+        taas_ext = (struct sal_taas_ext *)
+                skb_push(skb, SAL_TAAS_EXT_LEN);
+        taas_ext->ext_type = SAL_TAAS_EXT;
+        taas_ext->ext_length = SAL_TAAS_EXT_LEN;
+        taas_ext->authenticator = authenticator;
+
+        return SAL_TAAS_EXT_LEN;
+}
+
 /*
 static inline int serval_sal_add_pad_ext(struct sock *sk, 
                                          struct sk_buff *skb,
@@ -3869,7 +3907,8 @@ static inline int serval_sal_add_pad_ext(struct sock *sk,
 */
 
 static struct sal_hdr *serval_sal_build_header(struct sock *sk, 
-                                               struct sk_buff *skb)
+                                               struct sk_buff *skb,
+                                               uint64_t authenticator)
 {
         struct sal_hdr *sh;
         struct serval_sock *ssk = serval_sk(sk);
@@ -3896,6 +3935,11 @@ static struct sal_hdr *serval_sal_build_header(struct sock *sk,
                         hdr_len += serval_sal_add_service_ext(sk, skb, &ssk->local_srvid);
                         hdr_len += serval_sal_add_service_ext(sk, skb, &ssk->peer_srvid);
                 }
+        }
+
+        // Add TaaS extension?
+        if(authenticator != 0) {
+                hdr_len += serval_sal_add_taas_ext(sk, skb, authenticator);
         }
 
         /* Add SAL base header */
@@ -3925,6 +3969,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
 	struct target *target;
         struct sal_hdr *sh;
 	int err = -1;
+        uint64_t taas_auth = 0;
         struct service_iter iter;
         struct sk_buff *cskb = NULL;
         int dlen = skb->len - 8; /* KLUDGE?! TODO not sure where the
@@ -3970,7 +4015,31 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                                    SALF_FINWAIT2 | 
                                    SALF_CLOSING | 
                                    SALF_CLOSEWAIT)) {
-                sh = serval_sal_build_header(sk, skb);
+
+#ifdef TAAS
+                // TaaS-ify the packet?
+                se = service_find(&ssk->peer_srvid, SERVICE_ID_MAX_PREFIX_BITS);
+
+                if (se && service_iter_init(&iter, se, SERVICE_ITER_FORWARD) >= 0) {
+                        target = service_iter_next(&iter);
+
+                        service_iter_inc_stats(&iter, 1, dlen);
+
+                        skb_reset_transport_header(skb);
+
+                        {
+                                char ip[18];
+                                PRINTK("Sending packet to user-specified "
+                                       "advisory address\n");
+                        }
+
+                        service_iter_destroy(&iter);
+                        service_entry_put(se);
+                } else {
+                        service_inc_stats(-1, -dlen);
+                }
+#endif
+                sh = serval_sal_build_header(sk, skb, 0);
                 serval_sal_send_check(sh);
 
                 PRINTK("Serval XMIT\n");
@@ -3984,12 +4053,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
 	/* Use service id to resolve IP, unless IP is already set. */
         if (memcmp(&zero_addr, 
                    &inet_sk(sk)->inet_daddr, 
-                   sizeof(zero_addr)) != 0
-            && !((1 << sk->sk_state) & (SALF_CONNECTED | 
-                                        SALF_FINWAIT1 | 
-                                        SALF_FINWAIT2 | 
-                                        SALF_CLOSING | 
-                                        SALF_CLOSEWAIT))) {
+                   sizeof(zero_addr)) != 0) {
 
                 skb_reset_transport_header(skb);
 
@@ -4008,7 +4072,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                 */
                 /* for user-space, need to specify a device - the
                  * kernel will route */
-                sh = serval_sal_build_header(sk, skb);
+                sh = serval_sal_build_header(sk, skb, 0);
 
                 serval_sal_send_check(sh);
                 
@@ -4096,7 +4160,15 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                         kfree_skb(cskb);
                         err = -EHOSTUNREACH;
                         continue;
+                } else if (target->type == SERVICE_RULE_TAAS) {
+                        // TODO: Get from rule
+                        taas_auth = 1;
+                        target = next_target;
+                        continue;
                 }
+
+                // XXX: Just for testing
+                taas_auth = 1;
 
                 /* Remember the flow destination */
 		if (is_sock_target(target)) {
@@ -4171,7 +4243,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                 }
 
                 /* Add SAL header */
-                sh = serval_sal_build_header(sk, cskb);
+                sh = serval_sal_build_header(sk, cskb, taas_auth);
 
                 /* Compute SAL header checksum */
                 serval_sal_send_check(sh);

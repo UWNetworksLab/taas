@@ -45,6 +45,7 @@ typedef enum service_rule_type {
         SERVICE_RULE_DEMUX,
         SERVICE_RULE_DELAY,
         SERVICE_RULE_DROP, 
+        SERVICE_RULE_TAAS,
 } service_rule_type_t;
 
 struct service_info {

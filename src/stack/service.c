@@ -1301,6 +1301,7 @@ static int service_table_add(struct service_table *tbl,
                 break;
         case SERVICE_RULE_DELAY:
         case SERVICE_RULE_DROP:
+        case SERVICE_RULE_TAAS:
                 break;
         }
 

@@ -317,6 +317,7 @@ enum sal_ext_type {
         SAL_SERVICE_EXT,
         SAL_ADDRESS_EXT,
         SAL_SOURCE_EXT,
+        SAL_TAAS_EXT,
         __SAL_EXT_TYPE_MAX,
 };
 
@@ -383,6 +384,17 @@ SERVAL_ASSERT(sizeof(struct sal_address_ext) == 12)
 
 #define SAL_ADDRESS_EXT_LEN                     \
         sizeof(struct sal_address_ext)
+
+struct sal_taas_ext {
+        struct sal_ext exthdr;
+        uint16_t res;
+        uint64_t authenticator;
+} __attribute__((packed));
+
+SERVAL_ASSERT(sizeof(struct sal_taas_ext) == 12)
+
+#define SAL_TAAS_EXT_LEN                     \
+        sizeof(struct sal_taas_ext)
 
 struct sal_source_ext {
         struct sal_ext exthdr;
