@@ -3457,8 +3457,8 @@ int serval_sal_rcv(struct sk_buff *skb)
 
         /* Ok, we are ready to parse the full header. */       
         if (serval_sal_parse_hdr(skb, &ctx, SAL_PARSE_ALL)) {
-                PRINTK("Bad Serval header %s\n",
-                        ctx.hdr ? sal_hdr_to_str(ctx.hdr) : "NULL");
+                /* PRINTK("Bad Serval header %s\n", */
+                /*         ctx.hdr ? sal_hdr_to_str(ctx.hdr) : "NULL"); */
                 goto drop;
         }
         
