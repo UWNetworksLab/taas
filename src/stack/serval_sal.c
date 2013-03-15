@@ -371,7 +371,10 @@ static int parse_taas_ext(struct sal_ext *ext,
                              struct sk_buff *skb,
                              struct sal_context *ctx)
 {
-        PRINTK("TaaS extension support not implemented\n");
+        if (ctx->taas_ext)
+                return -1;
+
+        ctx->taas_ext = (struct sal_taas_ext *)ext;
         return ext_len;
 }
 
@@ -3266,6 +3269,168 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
         return err;
 }
 
+static int serval_sal_resolve_taas(struct sk_buff *skb, 
+                                   struct sal_context *ctx,
+                                   struct sock **sk)
+{
+        struct service_entry* se = NULL;
+        struct service_iter iter;
+        struct target *target = NULL;
+        unsigned int hdr_len = ctx->length;
+        unsigned int num_forward = 0;
+        unsigned int data_len = skb->len - hdr_len;
+        int err = SAL_RESOLVE_NO_MATCH;
+        struct service_id srvid;
+
+        *sk = NULL;
+
+        PRINTK("Resolve or demux inbound packet on taas authenticator %llu\n", 
+               ctx->taas_ext->authenticator);
+
+        /* Match on the highest priority srvid rule, even if it's not
+         * the sock TODO - use flags/prefix in resolution This should
+         * probably be in a separate function call
+         * serval_sal_transit_rcv or resolve something
+         */
+        srvid.srv_un.un_id32[0] = ctx->taas_ext->authenticator >> 32;
+        srvid.srv_un.un_id32[1] = ctx->taas_ext->authenticator & 0xffffffffULL;
+        se = service_find(&srvid, SERVICE_ID_MAX_PREFIX_BITS);
+
+        if (!se) {
+                PRINTK("No matching TaaS entry for serviceID %s\n",
+                       service_id_to_str(&srvid));
+                return SAL_RESOLVE_NO_MATCH;
+        }
+        
+	if (service_iter_init(&iter, se, SERVICE_ITER_ANYCAST) < 0)
+                return SAL_RESOLVE_ERROR;
+        
+        /*
+          Send to all targets listed for this service.
+        */
+        target = service_iter_next(&iter);
+
+        if (!target) {
+                LOG_INF("No target to forward on!\n");
+                service_iter_inc_stats(&iter, -1, data_len);
+                service_iter_destroy(&iter);
+                service_entry_put(se);
+                return SAL_RESOLVE_NO_MATCH;
+        }
+
+        service_iter_inc_stats(&iter, 1, data_len);
+                
+        while (target) {
+                struct target *next_target;
+                struct sk_buff *cskb = NULL;
+                struct iphdr *iph;
+                unsigned int iph_len;
+                unsigned int protocol = sal_hdr(skb)->protocol;
+                int ret = 0;
+                
+                next_target = service_iter_next(&iter);
+                
+                if(target->type != SERVICE_RULE_TAAS) {
+                        PRINTK("Skipping non-TaaS rule\n");
+                        continue;
+                }
+
+                /* TaaS rules forward packets */
+                err = SAL_RESOLVE_FORWARD;
+
+                if (skb->pkt_type != PACKET_HOST &&
+                    skb->pkt_type != PACKET_OTHERHOST) {
+                        /* Do not forward, e.g., broadcast
+                           packets as they may cause
+                           resolution loops. */
+                        LOG_DBG("Broadcast packet. Not forwarding\n");
+                        err = SAL_RESOLVE_DROP;
+                        break;
+                }
+                
+                if (!next_target && !(*sk)) {
+                        /* Only consume this skb if there are no more
+                           targets and we didn't resolve to a local
+                           socket (in which case we must continue
+                           processing the packet after this function
+                           returns). */
+                        cskb = skb;
+                } else {
+                        cskb = skb_copy(skb, GFP_ATOMIC);
+                        
+                        if (!cskb) {
+                                LOG_ERR("Skb allocation failed\n");
+                                err = SAL_RESOLVE_DROP;
+                                break;
+                        }
+                }
+
+                iph = ip_hdr(cskb);
+                iph_len = iph->ihl << 2;
+#if defined(OS_USER)
+                /* Set the output device - ip_forward uses the
+                 * out device specified in the dst_entry route
+                 * and assumes that skb->dev is the input
+                 * interface*/
+                if (target->out.dev)
+                        cskb->dev = target->out.dev;
+#endif /* OS_LINUX_KERNEL */
+                
+                /* Update destination address */
+                memcpy(&iph->daddr, target->dst, sizeof(iph->daddr));
+                        
+                /* Must recalculate transport checksum. Pull
+                   to reveal transport header */
+                pskb_pull(cskb, hdr_len);
+                skb_reset_transport_header(cskb);
+                        
+                serval_sal_update_transport_csum(cskb, protocol);
+                        
+                /* Push back to Serval header */
+                skb_push(cskb, hdr_len);
+                skb_reset_transport_header(cskb);
+                        
+                /* Recalculate SAL checksum */
+                serval_sal_send_check(sal_hdr(cskb));
+
+#if defined(OS_LINUX_KERNEL)
+                /* Packet is UDP encapsulated, push back UDP
+                 * encapsulation header */
+                if (ip_hdr(cskb)->protocol == IPPROTO_UDP) {
+                        skb_push(cskb, sizeof(struct udphdr));
+                        skb_reset_transport_header(cskb);
+                        udp_hdr(cskb)->len = htons(cskb->len);
+                        PRINTK("Pushed back UDP encapsulation [%u:%u]\n",
+                                ntohs(udp_hdr(skb)->source),
+                                ntohs(udp_hdr(skb)->dest));
+                        serval_sal_update_encap_csum(cskb);
+                }
+#endif
+                /* Push back to IP header */
+                skb_push(cskb, iph_len);
+
+                ret = serval_ipv4_forward_out(cskb);
+                        
+                if (ret) {
+                        /* serval_ipv4_forward_out has taken
+                           custody of packet, no need to
+                           free. */
+                        LOG_ERR("Forwarding failed\n");
+                } else 
+                        num_forward++;
+
+                target = next_target;
+        }
+        
+        if (num_forward == 0)
+                service_iter_inc_stats(&iter, -1, -data_len);
+        
+        service_iter_destroy(&iter);
+        service_entry_put(se);
+
+        return err;
+}
+
 static struct sock *serval_sal_demux_service(struct sk_buff *skb, 
                                              struct service_id *srvid,
                                              int protocol)
@@ -3320,13 +3485,18 @@ static int serval_sal_resolve(struct sk_buff *skb,
         if (ctx->length <= SAL_HEADER_LEN)
                 return SAL_RESOLVE_ERROR;
         
-        if (!ctx->srv_ext[0])
+        if (!ctx->srv_ext[0] || !ctx->taas_ext)
                 return SAL_RESOLVE_ERROR;
 
-        srvid = &ctx->srv_ext[0]->srvid;
+        if(ctx->srv_ext[0])
+                srvid = &ctx->srv_ext[0]->srvid;
 
         if (net_serval.sysctl_sal_forward) {
-                ret = serval_sal_resolve_service(skb, ctx, srvid, sk);
+                if(srvid != NULL) {
+                        ret = serval_sal_resolve_service(skb, ctx, srvid, sk);
+                } else {
+                        ret = serval_sal_resolve_taas(skb, ctx, sk);
+                }
         } else {
                 *sk = serval_sal_demux_service(skb, srvid, ctx->hdr->protocol);
                 
