@@ -3485,7 +3485,7 @@ static int serval_sal_resolve(struct sk_buff *skb,
         if (ctx->length <= SAL_HEADER_LEN)
                 return SAL_RESOLVE_ERROR;
         
-        if (!ctx->srv_ext[0] || !ctx->taas_ext)
+        if (!ctx->srv_ext[0] && !ctx->taas_ext)
                 return SAL_RESOLVE_ERROR;
 
         if(ctx->srv_ext[0])
