@@ -3984,7 +3984,12 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
 	/* Use service id to resolve IP, unless IP is already set. */
         if (memcmp(&zero_addr, 
                    &inet_sk(sk)->inet_daddr, 
-                   sizeof(zero_addr)) != 0) {
+                   sizeof(zero_addr)) != 0
+            && !((1 << sk->sk_state) & (SALF_CONNECTED | 
+                                        SALF_FINWAIT1 | 
+                                        SALF_FINWAIT2 | 
+                                        SALF_CLOSING | 
+                                        SALF_CLOSEWAIT))) {
 
                 skb_reset_transport_header(skb);
 
