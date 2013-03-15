@@ -2857,11 +2857,11 @@ int serval_sal_state_process(struct sock *sk,
 {
         int err = 0;
 
-        {
-                char buf[512];
-                PRINTK(sk, "SAL %s\n",
-                        serval_sock_print_state(sk, buf, 512));
-        }
+        /* { */
+        /*         char buf[512]; */
+        /*         PRINTK(sk, "SAL %s\n", */
+        /*                 serval_sock_print_state(sk, buf, 512)); */
+        /* } */
         if (ctx->ctrl_ext) {                
                 if (!has_valid_verno(ctx->verno, sk))
                         goto drop;
@@ -2880,6 +2880,8 @@ int serval_sal_state_process(struct sock *sk,
                                 err = serval_sal_rcv_rsyn(sk, skb, ctx);
                 }
         }
+
+        PRINTK("state process %u\n", sk->sk_state);
 
         switch (sk->sk_state) {
         case SAL_INIT:
