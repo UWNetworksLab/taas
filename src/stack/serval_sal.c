@@ -3269,6 +3269,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
         return err;
 }
 
+#if 0
 static int serval_sal_resolve_taas(struct sk_buff *skb, 
                                    struct sal_context *ctx,
                                    struct sock **sk)
@@ -3430,6 +3431,7 @@ static int serval_sal_resolve_taas(struct sk_buff *skb,
 
         return err;
 }
+#endif
 
 static struct sock *serval_sal_demux_service(struct sk_buff *skb, 
                                              struct service_id *srvid,
@@ -3480,7 +3482,7 @@ static int serval_sal_resolve(struct sk_buff *skb,
                               struct sock **sk)
 {
         int ret = SAL_RESOLVE_NO_MATCH;
-        struct service_id *srvid = NULL;
+        struct service_id *srvid = NULL, mysrvid;
         
         if (ctx->length <= SAL_HEADER_LEN)
                 return SAL_RESOLVE_ERROR;
@@ -3492,11 +3494,19 @@ static int serval_sal_resolve(struct sk_buff *skb,
                 srvid = &ctx->srv_ext[0]->srvid;
 
         if (net_serval.sysctl_sal_forward) {
-                if(srvid != NULL) {
-                        ret = serval_sal_resolve_service(skb, ctx, srvid, sk);
-                } else {
-                        ret = serval_sal_resolve_taas(skb, ctx, sk);
+                if(srvid == NULL) {
+                        PRINTK("Resolve or demux inbound packet on taas authenticator %llu\n", 
+                               ctx->taas_ext->authenticator);
+
+                        mysrvid.srv_un.un_id32[0] = ctx->taas_ext->authenticator >> 32;
+                        mysrvid.srv_un.un_id32[1] = ctx->taas_ext->authenticator & 0xffffffffULL;
+                        srvid = &mysrvid;
                 }
+
+                ret = serval_sal_resolve_service(skb, ctx, srvid, sk);
+                /* } else { */
+                /*         ret = serval_sal_resolve_taas(skb, ctx, sk); */
+                /* } */
         } else {
                 *sk = serval_sal_demux_service(skb, srvid, ctx->hdr->protocol);
                 
