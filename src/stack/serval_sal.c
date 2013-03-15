@@ -2857,13 +2857,11 @@ int serval_sal_state_process(struct sock *sk,
 {
         int err = 0;
 
-#if defined(ENABLE_DEBUG)
         {
                 char buf[512];
-                LOG_SSK(sk, "SAL %s\n",
+                PRINTK(sk, "SAL %s\n",
                         serval_sock_print_state(sk, buf, 512));
         }
-#endif
         if (ctx->ctrl_ext) {                
                 if (!has_valid_verno(ctx->verno, sk))
                         goto drop;
