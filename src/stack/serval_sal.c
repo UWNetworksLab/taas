@@ -3972,6 +3972,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                 sh = serval_sal_build_header(sk, skb);
                 serval_sal_send_check(sh);
 
+                PRINTK("Serval XMIT\n");
                 LOG_SSK(sk, "Serval XMIT %s skb->len=%u\n",
                         sal_hdr_to_str(sh), skb->len);
 
@@ -3984,6 +3985,13 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                    sizeof(zero_addr)) != 0) {
 
                 skb_reset_transport_header(skb);
+
+                {
+                        char ip[18];
+                        PRINTK("Sending packet to user-specified "
+                               "advisory address\n");
+                }
+
                 /*
                 char ip[18];
                 LOG_SSK(sk, "Sending packet to user-specified "
@@ -4010,6 +4018,8 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
         }
 
         LOG_SSK(sk, "Resolving service %s\n",
+                service_id_to_str(&ssk->peer_srvid));
+        PRINTK("Resolving service %s\n",
                 service_id_to_str(&ssk->peer_srvid));
 
         se = service_find(&ssk->peer_srvid, SERVICE_ID_MAX_PREFIX_BITS);
