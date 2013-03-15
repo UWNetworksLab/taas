@@ -3498,6 +3498,7 @@ static int serval_sal_resolve(struct sk_buff *skb,
                         PRINTK("Resolve or demux inbound packet on taas authenticator %llu\n", 
                                ctx->taas_ext->authenticator);
 
+                        memset(&mysrvid, 0, sizeof(struct service_id));
                         mysrvid.srv_un.un_id32[0] = ctx->taas_ext->authenticator >> 32;
                         mysrvid.srv_un.un_id32[1] = ctx->taas_ext->authenticator & 0xffffffffULL;
                         srvid = &mysrvid;
