@@ -4219,7 +4219,8 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                 return serval_sal_do_xmit(skb);
         }
 #endif
-        
+
+#if 0
 	/* Use service id to resolve IP, unless IP is already set. */
         if (memcmp(&zero_addr, 
                    &inet_sk(sk)->inet_daddr, 
@@ -4257,6 +4258,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                  */
                 return serval_sal_do_xmit(skb);
         }
+#endif
 
         LOG_SSK(sk, "Resolving service %s\n",
                 service_id_to_str(&ssk->peer_srvid));
