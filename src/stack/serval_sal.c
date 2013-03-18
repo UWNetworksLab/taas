@@ -3673,7 +3673,8 @@ int serval_sal_rcv(struct sk_buff *skb)
                 case SAL_RESOLVE_DROP:
                 case SAL_RESOLVE_ERROR:
                 default:
-                        PRINTK("SAL DROPPING %s\n", sal_hdr_to_str(ctx.hdr));
+                        /* PRINTK("SAL DROPPING %s\n", sal_hdr_to_str(ctx.hdr)); */
+                        PRINTK("SAL DROPPING\n");
                         goto drop;
                         break;
                 }
