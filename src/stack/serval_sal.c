@@ -3131,6 +3131,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                 unsigned int iph_len;
                 unsigned int protocol = sal_hdr(skb)->protocol;
                 int ret = 0;
+                char mydst[128];
                 
                 next_target = service_iter_next(&iter);
                 
@@ -3152,6 +3153,8 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                         break;
                 }
 
+                PRINTK("Forwarding to %s\n", inet_ntop(AF_INET, target->dst, mydst, 128));
+
                 /* We only get here if we resolved on a FORWARD RULE */
                 err = SAL_RESOLVE_FORWARD;
 
@@ -3160,7 +3163,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                         /* Do not forward, e.g., broadcast
                            packets as they may cause
                            resolution loops. */
-                        LOG_DBG("Broadcast packet. Not forwarding\n");
+                        PRINTK("Broadcast packet. Not forwarding\n");
                         err = SAL_RESOLVE_DROP;
                         break;
                 }
@@ -3176,7 +3179,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                         cskb = skb_copy(skb, GFP_ATOMIC);
                         
                         if (!cskb) {
-                                LOG_ERR("Skb allocation failed\n");
+                                PRINTK("Skb allocation failed\n");
                                 err = SAL_RESOLVE_DROP;
                                 break;
                         }
@@ -3200,7 +3203,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                 ret = serval_sal_add_source_ext(&cskb, ctx);
                 
                 if (ret < 0) {
-                        LOG_ERR("Failed to add source extension, err=%d\n", 
+                        PRINTK("Failed to add source extension, err=%d\n", 
                                 ret);
                         
                         /* Need to free the skb if it's a copy */
@@ -3253,7 +3256,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                                 /* serval_ipv4_forward_out has taken
                                    custody of packet, no need to
                                    free. */
-                                LOG_ERR("Forwarding failed\n");
+                                PRINTK("Forwarding failed\n");
                         } else 
                                 num_forward++;
                 }
