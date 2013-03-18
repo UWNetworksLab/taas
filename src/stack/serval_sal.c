@@ -3960,6 +3960,7 @@ static struct sal_hdr *serval_sal_build_header(struct sock *sk,
 
         // Add TaaS extension?
         if(authenticator != 0) {
+                PRINTK("Adding TaaS authenticator %u\n", authenticator);
                 hdr_len += serval_sal_add_taas_ext(sk, skb, authenticator);
         }
 
@@ -4185,6 +4186,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                         continue;
                 } else if (target->type == SERVICE_RULE_TAAS) {
                         // TODO: Get from rule
+                        PRINTK("Matching TaaS rule\n");
                         taas_auth = 1;
                         target = next_target;
                         continue;
