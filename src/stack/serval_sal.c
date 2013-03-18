@@ -3296,8 +3296,8 @@ static int serval_sal_resolve_taas(struct sk_buff *skb,
          * probably be in a separate function call
          * serval_sal_transit_rcv or resolve something
          */
-        srvid.srv_un.un_id32[0] = ctx->taas_ext->authenticator >> 32;
-        srvid.srv_un.un_id32[1] = ctx->taas_ext->authenticator & 0xffffffffULL;
+        srvid.srv_un.un_id32[1] = ntohl(ctx->taas_ext->authenticator >> 32);
+        srvid.srv_un.un_id32[0] = ntohl(ctx->taas_ext->authenticator & 0xffffffffULL);
         se = service_find(&srvid, 64);
 
         if (!se) {
