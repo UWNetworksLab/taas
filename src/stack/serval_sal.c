@@ -3298,7 +3298,7 @@ static int serval_sal_resolve_taas(struct sk_buff *skb,
          */
         srvid.srv_un.un_id32[0] = ctx->taas_ext->authenticator >> 32;
         srvid.srv_un.un_id32[1] = ctx->taas_ext->authenticator & 0xffffffffULL;
-        se = service_find(&srvid, SERVICE_ID_MAX_PREFIX_BITS);
+        se = service_find(&srvid, 64);
 
         if (!se) {
                 PRINTK("No matching TaaS entry for serviceID %s\n",
