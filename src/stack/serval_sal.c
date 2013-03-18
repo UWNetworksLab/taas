@@ -3101,7 +3101,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
         se = service_find(srvid, SERVICE_ID_MAX_PREFIX_BITS);
 
         if (!se) {
-                LOG_INF("No matching service entry for serviceID %s\n",
+                PRINTK("No matching service entry for serviceID %s\n",
                         service_id_to_str(srvid));
                 return SAL_RESOLVE_NO_MATCH;
         }
@@ -3115,7 +3115,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
         target = service_iter_next(&iter);
 
         if (!target) {
-                LOG_INF("No target to forward on!\n");
+                PRINTK("No target to forward on!\n");
                 service_iter_inc_stats(&iter, -1, data_len);
                 service_iter_destroy(&iter);
                 service_entry_put(se);
@@ -3651,7 +3651,7 @@ int serval_sal_rcv(struct sk_buff *skb)
         sk = serval_sal_demux_flow(skb, &ctx);
         
         if (!sk) {
-                PRINTK("No flow, resolving on serviceID\n");
+                /* PRINTK("No flow, resolving on serviceID\n"); */
                 /* Resolve on serviceID */
                 err = serval_sal_resolve(skb, &ctx, &sk);
                 
@@ -3660,7 +3660,7 @@ int serval_sal_rcv(struct sk_buff *skb)
                         break;
                 case SAL_RESOLVE_FORWARD:
                         /* Packet forwarded on out device */
-                        LOG_PKT("SAL FORWARD\n");
+                        PRINTK("SAL FORWARD\n");
                         return NET_RX_SUCCESS;
                 case SAL_RESOLVE_DELAY:
                         LOG_PKT("SAL DELAY\n");
@@ -3673,7 +3673,7 @@ int serval_sal_rcv(struct sk_buff *skb)
                 case SAL_RESOLVE_DROP:
                 case SAL_RESOLVE_ERROR:
                 default:
-                        LOG_PKT("SAL DROPPING %s\n", sal_hdr_to_str(ctx.hdr));
+                        PRINTK("SAL DROPPING %s\n", sal_hdr_to_str(ctx.hdr));
                         goto drop;
                         break;
                 }
