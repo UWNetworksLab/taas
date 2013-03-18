@@ -4275,6 +4275,8 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                    access to transport header */
                 skb_reset_transport_header(cskb);
 
+                PRINTK("Sending off\n");
+
 		local_err = ssk->af_ops->queue_xmit(cskb);
 
 		if (local_err < 0) {
