@@ -2907,7 +2907,7 @@ int serval_sal_state_process(struct sock *sk,
                 }
         }
 
-        PRINTK("state process %u\n", sk->sk_state);
+        /* PRINTK("state process %u\n", sk->sk_state); */
 
         switch (sk->sk_state) {
         case SAL_INIT:
@@ -3499,7 +3499,7 @@ int serval_sal_rcv(struct sk_buff *skb)
                         break;
                 case SAL_RESOLVE_FORWARD:
                         /* Packet forwarded on out device */
-                        PRINTK("SAL FORWARD\n");
+                        LOG_PKT("SAL FORWARD\n");
                         return NET_RX_SUCCESS;
                 case SAL_RESOLVE_DELAY:
                         LOG_PKT("SAL DELAY\n");
@@ -3513,7 +3513,7 @@ int serval_sal_rcv(struct sk_buff *skb)
                 case SAL_RESOLVE_ERROR:
                 default:
                         /* PRINTK("SAL DROPPING %s\n", sal_hdr_to_str(ctx.hdr)); */
-                        PRINTK("SAL DROPPING\n");
+                        LOG_PKT("SAL DROPPING\n");
                         goto drop;
                         break;
                 }
@@ -4189,9 +4189,6 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                         target = next_target;
                         continue;
                 }
-
-                // XXX: Just for testing
-                taas_auth = 1;
 
                 /* Remember the flow destination */
 		if (is_sock_target(target)) {
