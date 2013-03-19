@@ -194,10 +194,12 @@ static int print_address_ext(struct sal_ext *xt, char *buf, int buflen)
 
 static int print_taas_ext(struct sal_ext *xt, char *buf, int buflen)
 {
-        /* struct sal_taas_ext *dxt = 
-           (struct sal_taas_ext *)xt; */
-                
-        return 0;
+        struct sal_taas_ext *txt = 
+           (struct sal_taas_ext *)xt;
+
+        return snprintf(buf, buflen,
+                        "taasauth=%llu",
+                        txt->authenticator);
 }
 
 static int print_source_ext(struct sal_ext *xt, char *buf, int buflen)
@@ -4162,11 +4164,6 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                 } else if (target->type == SERVICE_RULE_DROP) {
                         kfree_skb(cskb);
                         err = -EHOSTUNREACH;
-                        continue;
-                } else if (target->type == SERVICE_RULE_TAAS) {
-                        // TODO: Get from rule
-                        PRINTK("Matching TaaS rule\n");
-                        target = next_target;
                         continue;
                 }
 

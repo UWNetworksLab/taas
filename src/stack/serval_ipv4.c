@@ -49,15 +49,13 @@ int serval_ipv4_rcv(struct sk_buff *skb)
         case IPPROTO_SERVAL:
                 break;
 	case IPPROTO_ICMP:
-		PRINTK("icmp packet\n");
+		LOG_DBG("icmp packet\n");
 	case IPPROTO_UDP:
 	case IPPROTO_TCP:
         default:
                 ret = INPUT_DELIVER;
                 goto out;
 	}
-
-        PRINTK("serval packet\n");
 
 #if defined(ENABLE_DEBUG)
         {

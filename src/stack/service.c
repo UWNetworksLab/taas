@@ -56,7 +56,6 @@ static const char *rule_str[] = {
         [SERVICE_RULE_DEMUX] = "DMX",
         [SERVICE_RULE_DELAY] = "DLY",
         [SERVICE_RULE_DROP] = "DRP",
-        [SERVICE_RULE_TAAS] = "TAS",
 };
 
 static const char *rule_to_str(service_rule_type_t type)
@@ -1304,7 +1303,6 @@ static int service_table_add(struct service_table *tbl,
                 break;
         case SERVICE_RULE_DELAY:
         case SERVICE_RULE_DROP:
-        case SERVICE_RULE_TAAS:
                 break;
         }
 

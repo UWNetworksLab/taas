@@ -182,8 +182,6 @@ static int service_parse_args(int argc, char **argv, void **result)
                 args.type = SERVICE_RULE_DELAY;
         } else if (strcmp(argv[0], "drop") == 0) {
                 args.type = SERVICE_RULE_DROP;
-        } else if (strcmp(argv[0], "taas") == 0) {
-                args.type = SERVICE_RULE_TAAS;
         } else {
                 ret = name_to_inet_addr(argv[0], &args.ipaddr1);
                 
