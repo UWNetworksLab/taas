@@ -936,17 +936,19 @@ static int __service_entry_print(struct bst_node *n, char *buf,
 
                         if (t->type == SERVICE_RULE_DEMUX && t->out.sk) {
                                 len = snprintf(buf + tot_len, buflen, 
-                                               "%-5s %s\n", 
+                                               "%-5s %-8s %s\n", 
                                                t->out.sk ? 
                                                "sock" : "NULL",
+                                               "none",
                                                protocol_to_str(t->out.sk->sk_protocol));
                                 
                         } else if (t->type == SERVICE_RULE_FORWARD && 
                                    t->out.dev) {
                                 len = snprintf(buf + tot_len, buflen, 
-                                               "%-5s %s\n",
+                                               "%-5s %-8llu %s\n",
                                                t->out.dev ? 
                                                t->out.dev->name : "any",
+                                               t->taas_auth,
                                                inet_ntop(AF_INET,
                                                          t->dst, 
                                                          dststr, 18));
