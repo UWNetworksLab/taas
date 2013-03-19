@@ -115,6 +115,7 @@ struct target {
         service_rule_type_t type;
         struct list_head lh;
         uint32_t weight;
+        uint64_t taas_auth;
         atomic_t packets_resolved;
         atomic_t bytes_resolved;
         atomic_t bytes_dropped;

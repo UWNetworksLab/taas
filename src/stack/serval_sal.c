@@ -4240,8 +4240,10 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                         ssk->af_ops->send_check(sk, cskb);
                 }
 
+                PRINTK("Sending off with TaaS authenticator %llu\n", target->taas_auth);
+
                 /* Add SAL header */
-                sh = serval_sal_build_header(sk, cskb, taas_auth);
+                sh = serval_sal_build_header(sk, cskb, target->taas_auth);
 
                 /* Compute SAL header checksum */
                 serval_sal_send_check(sh);
@@ -4250,8 +4252,6 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                    calculation since transport send_check requires
                    access to transport header */
                 skb_reset_transport_header(cskb);
-
-                PRINTK("Sending off\n");
 
 		local_err = ssk->af_ops->queue_xmit(cskb);
 

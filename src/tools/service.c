@@ -237,6 +237,24 @@ static int service_parse_args(int argc, char **argv, void **result)
 
                         argc--;
                         argv++;
+                } else if (strcmp("taas", argv[0]) == 0) {
+                        char *ptr = NULL;
+                        
+                        if (argc < 2) {
+                                fprintf(stderr, "No TaaS authenticator given\n");
+                                return -1;
+                        }
+                        
+                        args.taas_auth = strtoul(argv[1], &ptr, 10);
+                        
+                        if (*ptr != '\0' || argv[1][0] == '\0') {
+                                fprintf(stderr, "Bad TaaS authenticator %s\n",
+                                        argv[1]);
+                                return -1;
+                        }
+
+                        argc--;
+                        argv++;
                 } else {
                         ret = name_to_inet_addr(argv[0], &args.ipaddr2);
                         

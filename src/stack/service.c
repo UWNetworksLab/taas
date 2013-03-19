@@ -1006,9 +1006,9 @@ int __service_table_print(char *buf, size_t buflen)
                 buflen -= len;
 #endif
         len = snprintf(buf + tot_len, buflen, 
-                       "%-64s %-4s %-4s %-5s %-6s %-6s %-8s %-7s %s\n", 
+                       "%-64s %-4s %-4s %-5s %-6s %-6s %-8s %-7s %-8s %s\n", 
                        "prefix", "bits", "type", "flags", "prio", "weight", 
-                       "resolved", "dropped", "target(s)");
+                       "resolved", "dropped", "TaaSauth", "target(s)");
         
         tot_len += len;
         
