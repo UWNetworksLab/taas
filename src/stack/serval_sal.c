@@ -2887,11 +2887,13 @@ int serval_sal_state_process(struct sock *sk,
 {
         int err = 0;
 
-        /* { */
-        /*         char buf[512]; */
-        /*         PRINTK(sk, "SAL %s\n", */
-        /*                 serval_sock_print_state(sk, buf, 512)); */
-        /* } */
+#if defined(ENABLE_DEBUG)
+        {
+                char buf[512];
+                PRINTK(sk, "SAL %s\n",
+                        serval_sock_print_state(sk, buf, 512));
+        }
+#endif
         if (ctx->ctrl_ext) {                
                 if (!has_valid_verno(ctx->verno, sk))
                         goto drop;
@@ -2910,8 +2912,6 @@ int serval_sal_state_process(struct sock *sk,
                                 err = serval_sal_rcv_rsyn(sk, skb, ctx);
                 }
         }
-
-        /* PRINTK("state process %u\n", sk->sk_state); */
 
         switch (sk->sk_state) {
         case SAL_INIT:
@@ -3094,8 +3094,8 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
 
         *sk = NULL;
 
-        PRINTK("Resolve or demux inbound packet on serviceID %s\n", 
-               service_id_to_str(srvid));
+        /* PRINTK("Resolve or demux inbound packet on serviceID %s\n",  */
+        /*        service_id_to_str(srvid)); */
 
         /* Match on the highest priority srvid rule, even if it's not
          * the sock TODO - use flags/prefix in resolution This should
@@ -3157,7 +3157,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                         break;
                 }
 
-                PRINTK("Forwarding to %s\n", inet_ntop(AF_INET, target->dst, mydst, 128));
+                /* PRINTK("Forwarding to %s\n", inet_ntop(AF_INET, target->dst, mydst, 128)); */
 
                 /* We only get here if we resolved on a FORWARD RULE */
                 err = SAL_RESOLVE_FORWARD;
@@ -3167,7 +3167,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                         /* Do not forward, e.g., broadcast
                            packets as they may cause
                            resolution loops. */
-                        PRINTK("Broadcast packet. Not forwarding\n");
+                        /* PRINTK("Broadcast packet. Not forwarding\n"); */
                         err = SAL_RESOLVE_DROP;
                         break;
                 }
@@ -3338,8 +3338,8 @@ static int serval_sal_resolve(struct sk_buff *skb,
 
         if (net_serval.sysctl_sal_forward) {
                 if(srvid == NULL) {
-                        PRINTK("Resolve or demux inbound packet on taas authenticator %llu\n", 
-                               ctx->taas_ext->authenticator);
+                        /* PRINTK("Resolve or demux inbound packet on taas authenticator %llu\n",  */
+                        /*        ctx->taas_ext->authenticator); */
 
                         memset(&mysrvid, 0, sizeof(struct service_id));
                         mysrvid.srv_un.un_id32[1] = ntohl(ctx->taas_ext->authenticator >> 32);
@@ -3966,7 +3966,7 @@ static struct sal_hdr *serval_sal_build_header(struct sock *sk,
 
         // Add TaaS extension?
         if(authenticator != 0) {
-                PRINTK("Adding TaaS authenticator %llu\n", authenticator);
+                /* PRINTK("Adding TaaS authenticator %llu\n", authenticator); */
                 hdr_len += serval_sal_add_taas_ext(sk, skb, authenticator);
         }
 
@@ -4095,8 +4095,8 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
 
         LOG_SSK(sk, "Resolving service %s\n",
                 service_id_to_str(&ssk->peer_srvid));
-        PRINTK("Resolving service %s\n",
-                service_id_to_str(&ssk->peer_srvid));
+        /* PRINTK("Resolving service %s\n", */
+        /*         service_id_to_str(&ssk->peer_srvid)); */
 
         se = service_find(&ssk->peer_srvid, SERVICE_ID_MAX_PREFIX_BITS);
 
@@ -4239,7 +4239,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                         ssk->af_ops->send_check(sk, cskb);
                 }
 
-                PRINTK("Sending off with TaaS authenticator %llu\n", target->taas_auth);
+                /* PRINTK("Sending off with TaaS authenticator %llu\n", target->taas_auth); */
 
                 /* Add SAL header */
                 sh = serval_sal_build_header(sk, cskb, target->taas_auth);
