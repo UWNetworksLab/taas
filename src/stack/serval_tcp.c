@@ -1514,6 +1514,8 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 
 	timeo = sock_rcvtimeo(sk, nonblock);
 
+        PRINTK("recvmsg 2\n");
+
 	/* Urgent data needs to be handled specially. */
 	if (flags & MSG_OOB)
 		goto recv_urg;
@@ -1524,7 +1526,11 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 		seq = &peek_seq;
 	}
 
+        PRINTK("recvmsg 3\n");
+
 	target = sock_rcvlowat(sk, flags & MSG_WAITALL, len);
+
+        PRINTK("recvmsg 4\n");
 
 #ifdef CONFIG_NET_DMA
 	tp->ucopy.dma_chan = NULL;
@@ -1551,6 +1557,8 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 	do {
 		u32 offset;
 
+                PRINTK("recvmsg loop 1\n");
+
 		/* Are we at urgent data? Stop if we have read
                  * anything or have SIGURG pending. */
 		if (tp->urg_data && tp->urg_seq == *seq) {
@@ -1569,6 +1577,8 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
                         goto wait_for_event;
 
 		/* Next get a buffer. */
+
+                PRINTK("recvmsg loop 2\n");
 
 		skb_queue_walk(&sk->sk_receive_queue, skb) {
 			/* Now that we have two receive queues this
@@ -1597,6 +1607,8 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 		}
         wait_for_event:
 		/* Well, if we have backlog, try to process it now yet. */
+
+                PRINTK("recvmsg loop 3\n");
 
 		if (copied >= target && !sk->sk_backlog.tail)
 			break;
@@ -1645,6 +1657,8 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 				break;
 			}
 		}
+
+                PRINTK("recvmsg loop 4\n");
 
                 LOG_DBG("tp->copied_seq=%u tp->rcv_nxt=%u\n",
                         tp->copied_seq, tp->rcv_nxt);
@@ -1868,6 +1882,8 @@ skip_copy:
                 break;
 	} while (len > 0);
 
+        PRINTK("recvmsg after loop 1\n");
+
 	if (user_recv) {
 		if (!skb_queue_empty(&tp->ucopy.prequeue)) {
 			int chunk;
@@ -1890,6 +1906,8 @@ skip_copy:
 		tp->ucopy.len = 0;
 	}
 
+        PRINTK("recvmsg after loop 2\n");
+
 #ifdef CONFIG_NET_DMA
 	serval_tcp_service_net_dma(sk, true);  /* Wait for queue to drain */
 	tp->ucopy.dma_chan = NULL;
@@ -1900,12 +1918,16 @@ skip_copy:
 	}
 #endif
 
+        PRINTK("recvmsg after loop 3\n");
+
 	/* According to UNIX98, msg_name/msg_namelen are ignored
 	 * on connected socket. I was just happy when found this 8) --ANK
 	 */
 
 	/* Clean up data we have read: This will do ACK frames. */
 	serval_tcp_cleanup_rbuf(sk, copied);
+
+        PRINTK("recvmsg done\n");
 
 	release_sock(sk);
         LOG_SSK(sk, "copied=%d\n", copied);
@@ -1918,6 +1940,8 @@ out:
 	return err;
 
 recv_urg:
+        PRINTK("recvmsg urg\n");
+
 	err = serval_tcp_recv_urg(sk, msg, len, flags);
 	goto out;
 }
