@@ -616,6 +616,7 @@ int netdev_populate_table(int sizeof_priv,
                 service_add(&default_service, 0, SERVICE_RULE_FORWARD, 0, 
                             BROADCAST_SERVICE_DEFAULT_PRIORITY,
                             BROADCAST_SERVICE_DEFAULT_WEIGHT,  
+                            0,
                             &dev->ipv4.broadcast, 
                             sizeof(dev->ipv4.broadcast), make_target(dev), 0);
 

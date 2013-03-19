@@ -402,6 +402,7 @@ void serval_sock_hash(struct sock *sk)
                                   SERVICE_RULE_DEMUX, ssk->srvid_flags, 
                                   LOCAL_SERVICE_DEFAULT_PRIORITY, 
                                   LOCAL_SERVICE_DEFAULT_WEIGHT,
+                                  0,
                                   NULL, 0, make_target(sk), GFP_ATOMIC);
                 if (err < 0) {
 #if defined(OS_LINUX_KERNEL)

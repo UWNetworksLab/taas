@@ -86,7 +86,7 @@ static const char *protocol_to_str(int protocol)
 static struct target *target_create(service_rule_type_t type,
                                     const void *dst, int dstlen,
                                     const union target_out out, 
-                                    uint32_t weight,
+                                    uint32_t weight, uint64_t taas_auth,
                                     gfp_t alloc) 
 {
         struct target *t;
@@ -102,6 +102,7 @@ static struct target *target_create(service_rule_type_t type,
         memset(t, 0, sizeof(*t) + dstlen);
         t->type = type;
         t->weight = weight;
+        t->taas_auth = taas_auth;
         t->dstlen = dstlen;
 
         if (dstlen > 0) {
@@ -306,7 +307,7 @@ __service_entry_get_target_set(struct service_entry *se,
 static int __service_entry_add_target(struct service_entry *se, 
                                       service_rule_type_t type,
                                       uint16_t flags, uint32_t priority,
-                                      uint32_t weight, const void *dst, 
+                                      uint32_t weight, uint64_t taas_auth, const void *dst, 
                                       int dstlen, const union target_out out, 
                                       gfp_t alloc) 
 {
@@ -327,7 +328,7 @@ static int __service_entry_add_target(struct service_entry *se,
                 return 0;
         }
         
-        t = target_create(type, dst, dstlen, out, weight, alloc);
+        t = target_create(type, dst, dstlen, out, weight, taas_auth, alloc);
 
         if (!t)
                 return -ENOMEM;
@@ -353,7 +354,7 @@ static int __service_entry_add_target(struct service_entry *se,
 
 int service_entry_add_target(struct service_entry *se, 
                              service_rule_type_t type, uint16_t flags, 
-                             uint32_t priority, uint32_t weight, 
+                             uint32_t priority, uint32_t weight, uint64_t taas_auth,
                              const void *dst, int dstlen, 
                              const union target_out out, gfp_t alloc) 
 {
@@ -367,7 +368,7 @@ int service_entry_add_target(struct service_entry *se,
            new memory is allocated before we lock the table.
         */
         ret = __service_entry_add_target(se, type, flags, priority, 
-                                         weight, dst, dstlen, 
+                                         weight, taas_auth, dst, dstlen, 
                                          out, GFP_ATOMIC);
         write_unlock_bh(&se->lock);
 
@@ -1278,6 +1279,7 @@ static int service_table_add(struct service_table *tbl,
                              uint16_t flags, 
                              uint32_t priority, 
                              uint32_t weight, 
+                             uint64_t taas_auth,
                              const void *dst,
                              int dstlen, 
                              const union target_out out, 
@@ -1348,7 +1350,7 @@ static int service_table_add(struct service_table *tbl,
                         ret = __service_entry_add_target(get_service(n),
                                                          type,
                                                          flags, priority, 
-                                                         weight, dst, dstlen,
+                                                         weight, taas_auth, dst, dstlen,
                                                          out, GFP_ATOMIC);
                 }
                 goto out;
@@ -1363,7 +1365,7 @@ static int service_table_add(struct service_table *tbl,
 
         
         ret = __service_entry_add_target(se, type, flags, priority, 
-                                         weight, dst, dstlen, out,
+                                         weight, taas_auth, dst, dstlen, out,
                                          GFP_ATOMIC);
         
         if (ret < 0) {
@@ -1404,6 +1406,7 @@ int service_add(struct service_id *srvid,
                 uint16_t flags, 
                 uint32_t priority,
                 uint32_t weight, 
+                uint64_t taas_auth,
                 const void *dst, 
                 int dstlen, 
                 const union target_out out, 
@@ -1411,7 +1414,7 @@ int service_add(struct service_id *srvid,
 {
         return service_table_add(&srvtable, srvid, prefix_bits, 
                                  type, flags, priority, 
-                                 weight == 0 ? 1 : weight, dst, dstlen,
+                                 weight == 0 ? 1 : weight, taas_auth, dst, dstlen,
                                  out, alloc);
 }
 

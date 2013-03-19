@@ -104,6 +104,7 @@ static int ctrl_handle_add_service_msg(struct ctrlmsg *cm, int peer)
                                   entry->srvid_flags, 
                                   entry->priority, 
                                   entry->weight,
+                                  entry->taas_auth,
                                   &entry->address, 
                                   sizeof(entry->address),
                                   make_target(dev), GFP_KERNEL);

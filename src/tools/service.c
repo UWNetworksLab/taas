@@ -270,13 +270,14 @@ static int service_parse_args(int argc, char **argv, void **result)
         }
         {
                 char buf[18];
-                printf("%s %s:%u %s priority=%u weight=%u\n",
+                printf("%s %s:%u %s priority=%u weight=%u, taas=%llu\n",
                        opnames[args.op].long_name,
                        service_id_to_str(&args.srvid), 
                        args.prefix_bits, 
                        inet_ntop(AF_INET, &args.ipaddr1, buf, 18),
                        args.priority,
-                       args.weight);
+                       args.weight,
+                       args.taas_auth);
         }
         
         *result = &args;

@@ -52,9 +52,11 @@ static struct net_addr local_addr = {
         .net_raw = { 0x7F, 0x00, 0x00, 0x01 }
 };
 
+#if 0
 static struct net_addr zero_addr = {
         .net_raw = { 0x00, 0x00, 0x00, 0x00 }
 };
+#endif
 
 #define MAX_NUM_SAL_EXTENSIONS 10 /* Includes padding */
 
@@ -3756,6 +3758,7 @@ out:
 	sock_put(sk);
 }
 
+#if 0
 static int serval_sal_do_xmit(struct sk_buff *skb)
 {
         struct sock *sk = skb->sk;
@@ -3855,6 +3858,7 @@ static int serval_sal_do_xmit(struct sk_buff *skb)
 
         return err;
 }
+#endif
 
 static inline int serval_sal_add_ctrl_ext(struct sock *sk, 
                                           struct sk_buff *skb)
@@ -3960,7 +3964,7 @@ static struct sal_hdr *serval_sal_build_header(struct sock *sk,
 
         // Add TaaS extension?
         if(authenticator != 0) {
-                PRINTK("Adding TaaS authenticator %u\n", authenticator);
+                PRINTK("Adding TaaS authenticator %llu\n", authenticator);
                 hdr_len += serval_sal_add_taas_ext(sk, skb, authenticator);
         }
 
@@ -3991,7 +3995,6 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
 	struct target *target;
         struct sal_hdr *sh;
 	int err = -1;
-        uint64_t taas_auth = 0;
         struct service_iter iter;
         struct sk_buff *cskb = NULL;
         int dlen = skb->len - 8; /* KLUDGE?! TODO not sure where the
@@ -4163,7 +4166,6 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                 } else if (target->type == SERVICE_RULE_TAAS) {
                         // TODO: Get from rule
                         PRINTK("Matching TaaS rule\n");
-                        taas_auth = 1;
                         target = next_target;
                         continue;
                 }
