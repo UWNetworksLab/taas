@@ -121,7 +121,8 @@ int hostctrl_service_add(struct hostctrl *hc,
                          unsigned short prefix_bits,
                          unsigned int priority,
                          unsigned int weight,
-                         const struct in_addr *ipaddr);
+                         const struct in_addr *ipaddr,
+                         uint64_t taas_auth);
 int hostctrl_service_remove(struct hostctrl *hc,
                             enum service_rule_type type,
                             const struct service_id *srvid, 

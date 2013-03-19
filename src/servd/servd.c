@@ -541,7 +541,7 @@ static int handle_incoming_registration(struct hostctrl *hc,
                 ret = hostctrl_service_add(ctx->lhc,
                                            SERVICE_RULE_FORWARD,
                                            srvid, prefix,
-                                           0, 0, remote_ip);
+                                           0, 0, remote_ip, 0);
         }
 
         return ret;
@@ -614,7 +614,7 @@ static int local_service_get_result(struct hostctrl *hc,
                         ret = hostctrl_service_add(ctx->lhc, 
                                                    SERVICE_RULE_FORWARD,
                                                    &default_service,
-                                                   0, 1, 0, &ctx->router_ip);
+                                                   0, 1, 0, &ctx->router_ip, 0);
                 } else if (!ctx->router && ctx->router_ip_set && 
                            memcmp(&default_service, &si->srvid, 
                                   sizeof(default_service)) == 0 && 

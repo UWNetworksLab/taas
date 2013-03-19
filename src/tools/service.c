@@ -81,6 +81,7 @@ struct arguments {
         unsigned int priority;
         unsigned int weight;
         unsigned short prefix_bits;
+        uint64_t taas_auth;
 };
 
 static int service_parse_args(int argc, char **argv, void **result)
@@ -277,7 +278,7 @@ static int service_execute(struct hostctrl *hctl, void *in_args)
                                            &args->srvid, 
                                            args->prefix_bits, 
                                            args->priority, 
-                                           args->weight, args->ip1);
+                                           args->weight, args->ip1, args->taas_auth);
                 break;
         case SERVICE_OP_DEL:
                 ret = hostctrl_service_remove(hctl, args->type, &args->srvid, 

@@ -276,7 +276,8 @@ int hostctrl_service_add(struct hostctrl *hc,
                          unsigned short prefix_bits,
                          unsigned int priority,
                          unsigned int weight,
-                         const struct in_addr *ipaddr)
+                         const struct in_addr *ipaddr,
+                         uint64_t taas_auth)
 {
     struct service_id default_service;
 
@@ -286,7 +287,7 @@ int hostctrl_service_add(struct hostctrl *hc,
         srvid = &default_service;
 
     return hc->ops->service_add(hc, type, srvid, prefix_bits, 
-                                priority, weight, ipaddr);
+                                priority, weight, ipaddr, taas_auth);
 }
 
 int hostctrl_service_remove(struct hostctrl *hc,

@@ -4037,30 +4037,6 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                                    SALF_FINWAIT2 | 
                                    SALF_CLOSING | 
                                    SALF_CLOSEWAIT)) {
-
-#ifdef TAAS
-                // TaaS-ify the packet?
-                se = service_find(&ssk->peer_srvid, SERVICE_ID_MAX_PREFIX_BITS);
-
-                if (se && service_iter_init(&iter, se, SERVICE_ITER_FORWARD) >= 0) {
-                        target = service_iter_next(&iter);
-
-                        service_iter_inc_stats(&iter, 1, dlen);
-
-                        skb_reset_transport_header(skb);
-
-                        {
-                                char ip[18];
-                                PRINTK("Sending packet to user-specified "
-                                       "advisory address\n");
-                        }
-
-                        service_iter_destroy(&iter);
-                        service_entry_put(se);
-                } else {
-                        service_inc_stats(-1, -dlen);
-                }
-#endif
                 sh = serval_sal_build_header(sk, skb, 0);
                 serval_sal_send_check(sh);
 

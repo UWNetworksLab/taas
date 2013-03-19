@@ -55,13 +55,14 @@ struct service_info {
         uint32_t if_index;
         uint32_t priority; /* Priority level of flow entry. */
         uint32_t weight;
+        uint64_t taas_auth;
         uint32_t idle_timeout; /* Idle time before discarding (seconds). */
         uint32_t hard_timeout; /* Max time before discarding (seconds). */
         struct in_addr address;
         struct service_id srvid;
 } CTRLMSG_PACKED;
 
-CTRLMSG_ASSERT(sizeof(struct service_info) == 60)
+CTRLMSG_ASSERT(sizeof(struct service_info) == 68)
 
 struct service_info_stat {
         struct service_info service;
@@ -74,7 +75,7 @@ struct service_info_stat {
         uint32_t tokens_consumed;
 } CTRLMSG_PACKED;
 
-CTRLMSG_ASSERT(sizeof(struct service_info_stat) == 88)
+CTRLMSG_ASSERT(sizeof(struct service_info_stat) == 96)
 
 struct service_stat {
         uint32_t capabilities;
