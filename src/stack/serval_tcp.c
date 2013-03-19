@@ -1506,6 +1506,8 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 
 	lock_sock(sk);
 
+        PRINTK("recvmsg 1\n");
+
 	err = -ENOTCONN;
 	if (sk->sk_state == TCP_LISTEN)
 		goto out;
@@ -1910,6 +1912,7 @@ skip_copy:
 	return copied;
 
 out:
+        PRINTK("recvmsg out\n");
 	release_sock(sk);
         LOG_SSK(sk, "err=%d\n", err);
 	return err;
