@@ -1719,12 +1719,17 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 		if (tp->ucopy.dma_chan)
 			dma_async_memcpy_issue_pending(tp->ucopy.dma_chan);
 #endif
+                PRINTK("recvmsg loop 6.1\n");
 		if (copied >= target) {
+                        PRINTK("recvmsg loop 6.1.1\n");
 			/* Do not sleep, just process backlog. */
 			release_sock(sk);
 			lock_sock(sk);
+                        PRINTK("recvmsg loop 6.1.2\n");
 		} else {
+                        PRINTK("recvmsg loop 6.2.1\n");
 			sk_wait_data(sk, &timeo);
+                        PRINTK("recvmsg loop 6.2.2\n");
                         LOG_SSK(sk, "woke up after waiting for data\n");
                 }
 #ifdef CONFIG_NET_DMA
