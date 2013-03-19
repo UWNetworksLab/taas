@@ -4035,7 +4035,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
          * instead, which is released in the skb's destructor.
          */
 
-#if 0
+#if 1
         /* If we are connected, transmit immediately */
         if ((1 << sk->sk_state) & (SALF_CONNECTED | 
                                    SALF_FINWAIT1 | 
@@ -4061,11 +4061,8 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
 
                 skb_reset_transport_header(skb);
 
-                {
-                        char ip[18];
-                        PRINTK("Sending packet to user-specified "
-                               "advisory address\n");
-                }
+                PRINTK("Sending packet to user-specified "
+                       "advisory address\n");
 
                 /*
                 char ip[18];
