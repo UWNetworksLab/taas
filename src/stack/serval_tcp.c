@@ -1665,6 +1665,8 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 
 		serval_tcp_cleanup_rbuf(sk, copied);
 
+                PRINTK("recvmsg loop 5\n");
+
 		if (!sysctl_serval_tcp_low_latency && 
                     tp->ucopy.task == user_recv) {
 			/* Install new reader */
@@ -1711,6 +1713,8 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 			/* __ Set realtime policy in scheduler __ */
 		}
 
+                PRINTK("recvmsg loop 6\n");
+
 #ifdef CONFIG_NET_DMA
 		if (tp->ucopy.dma_chan)
 			dma_async_memcpy_issue_pending(tp->ucopy.dma_chan);
@@ -1727,6 +1731,8 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 		serval_tcp_service_net_dma(sk, false);  /* Don't block */
 		tp->ucopy.wakeup = 0;
 #endif
+
+                PRINTK("recvmsg loop 7\n");
 
 		if (user_recv) {
 			int chunk;
@@ -1765,6 +1771,9 @@ do_prequeue:
                                 */
 			peek_seq = tp->copied_seq;
 		}
+
+                PRINTK("recvmsg loop 8\n");
+
 		continue;
 
 	found_ok_skb:
@@ -1835,6 +1844,8 @@ do_prequeue:
 			}
 		}
 
+                PRINTK("recvmsg loop 9\n");
+
 		*seq += used;
 		copied += used;
 		len -= used;
@@ -1842,6 +1853,8 @@ do_prequeue:
 		serval_tcp_rcv_space_adjust(sk);
 
 skip_copy:
+                PRINTK("recvmsg loop 10\n");
+
 		if (tp->urg_data && after(tp->copied_seq, tp->urg_seq)) {
 			tp->urg_data = 0;
 			serval_tcp_fast_path_check(sk);
