@@ -52,7 +52,7 @@ static struct net_addr local_addr = {
         .net_raw = { 0x7F, 0x00, 0x00, 0x01 }
 };
 
-#if 0
+#if 1
 static struct net_addr zero_addr = {
         .net_raw = { 0x00, 0x00, 0x00, 0x00 }
 };
