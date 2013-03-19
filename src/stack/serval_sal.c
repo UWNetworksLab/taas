@@ -4035,7 +4035,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
          * instead, which is released in the skb's destructor.
          */
 
-#if 1
+#if 0
         /* If we are connected, transmit immediately */
         if ((1 << sk->sk_state) & (SALF_CONNECTED | 
                                    SALF_FINWAIT1 | 
@@ -4045,7 +4045,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                 sh = serval_sal_build_header(sk, skb, 0);
                 serval_sal_send_check(sh);
 
-                PRINTK("Serval XMIT\n");
+                /* PRINTK("Serval XMIT\n"); */
                 LOG_SSK(sk, "Serval XMIT %s skb->len=%u\n",
                         sal_hdr_to_str(sh), skb->len);
 
