@@ -3435,7 +3435,7 @@ int serval_sal_rcv(struct sk_buff *skb)
         unsigned int sal_length;
         int err = 0;
         
-        /* PRINTK("serval_sal_rcv: %p\n", __builtin_return_address(0)); */
+        PRINTK("serval_sal_rcv: %p\n", __builtin_return_address(0));
 
 #if defined(ENABLE_DEBUG)
         {
@@ -3491,6 +3491,8 @@ int serval_sal_rcv(struct sk_buff *skb)
                 goto drop;
         }       
 
+        PRINTK("demux flow\n");
+
         sk = serval_sal_demux_flow(skb, &ctx);
         
         if (!sk) {
@@ -3523,6 +3525,8 @@ int serval_sal_rcv(struct sk_buff *skb)
                 }
         }
 
+        PRINTK("rcv_finish\n");
+
         /* We could potentially call sk_receive_skb() here, which does
            pretty much the same thing as
            serval_sal_rcv_finish(). However, sk_receive_skb() sets
@@ -3532,6 +3536,8 @@ int serval_sal_rcv(struct sk_buff *skb)
         
         if (err < 0)
                 return NET_RX_DROP;
+
+        PRINTK("success\n");
       
         return NET_RX_SUCCESS;
  drop:
