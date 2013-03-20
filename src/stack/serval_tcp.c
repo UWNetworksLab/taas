@@ -1727,7 +1727,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 			lock_sock(sk);
                         PRINTK("recvmsg loop 6.1.2\n");
 		} else {
-                        PRINTK("recvmsg loop 6.2.1\n");
+                        PRINTK("recvmsg loop 6.2.1, timeo = %lu\n", timeo);
 			sk_wait_data(sk, &timeo);
                         PRINTK("recvmsg loop 6.2.2\n");
                         LOG_SSK(sk, "woke up after waiting for data\n");
