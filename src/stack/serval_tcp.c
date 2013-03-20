@@ -1557,7 +1557,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 	do {
 		u32 offset;
 
-                PRINTK("recvmsg loop 1\n");
+                PRINTK("recvmsg loop 1, len = %zd\n", len);
 
 		/* Are we at urgent data? Stop if we have read
                  * anything or have SIGURG pending. */
@@ -1608,7 +1608,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
         wait_for_event:
 		/* Well, if we have backlog, try to process it now yet. */
 
-                PRINTK("recvmsg loop 3\n");
+                PRINTK("recvmsg loop 3, copied=%d, target=%d\n", copied, target);
 
 		if (copied >= target && !sk->sk_backlog.tail)
 			break;
@@ -1783,6 +1783,8 @@ do_prequeue:
 		continue;
 
 	found_ok_skb:
+                PRINTK("OK SKB, len=%d, offset=%u", skb->len, offset);
+
 		/* Ok so how much can we use? */
 		used = skb->len - offset;
 		if (len < used)
