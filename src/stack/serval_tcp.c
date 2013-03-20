@@ -1506,15 +1506,11 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 
 	lock_sock(sk);
 
-        PRINTK("recvmsg 1\n");
-
 	err = -ENOTCONN;
 	if (sk->sk_state == TCP_LISTEN)
 		goto out;
 
 	timeo = sock_rcvtimeo(sk, nonblock);
-
-        PRINTK("recvmsg 2\n");
 
 	/* Urgent data needs to be handled specially. */
 	if (flags & MSG_OOB)
@@ -1526,11 +1522,9 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 		seq = &peek_seq;
 	}
 
-        PRINTK("recvmsg 3\n");
-
 	target = sock_rcvlowat(sk, flags & MSG_WAITALL, len);
 
-        PRINTK("recvmsg 4\n");
+        PRINTK("target = %u\n", target);
 
 #ifdef CONFIG_NET_DMA
 	tp->ucopy.dma_chan = NULL;
@@ -1578,7 +1572,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 
 		/* Next get a buffer. */
 
-                PRINTK("recvmsg loop 2\n");
+                PRINTK("skb_queue_walk\n");
 
 		skb_queue_walk(&sk->sk_receive_queue, skb) {
 			/* Now that we have two receive queues this
@@ -1591,6 +1585,8 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 			offset = *seq - TCP_SKB_CB(skb)->seq;
 			if (tcp_hdr(skb)->syn)
 				offset--;
+
+                        PRINTK("offset=%u, len=%u\n", offset, skb->len);
                         
 			if (offset < skb->len)
 				goto found_ok_skb;
@@ -1608,7 +1604,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
         wait_for_event:
 		/* Well, if we have backlog, try to process it now yet. */
 
-                PRINTK("recvmsg loop 3, copied=%d, target=%d\n", copied, target);
+                PRINTK("wait_for_event, copied=%d, target=%d\n", copied, target);
 
 		if (copied >= target && !sk->sk_backlog.tail)
 			break;
@@ -1658,14 +1654,10 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 			}
 		}
 
-                PRINTK("recvmsg loop 4\n");
-
                 LOG_DBG("tp->copied_seq=%u tp->rcv_nxt=%u\n",
                         tp->copied_seq, tp->rcv_nxt);
 
 		serval_tcp_cleanup_rbuf(sk, copied);
-
-                PRINTK("recvmsg loop 5\n");
 
 		if (!sysctl_serval_tcp_low_latency && 
                     tp->ucopy.task == user_recv) {
@@ -1713,24 +1705,22 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 			/* __ Set realtime policy in scheduler __ */
 		}
 
-                PRINTK("recvmsg loop 6\n");
-
 #ifdef CONFIG_NET_DMA
 		if (tp->ucopy.dma_chan)
 			dma_async_memcpy_issue_pending(tp->ucopy.dma_chan);
 #endif
-                PRINTK("recvmsg loop 6.1\n");
+                PRINTK("copied >= target?\n");
 		if (copied >= target) {
-                        PRINTK("recvmsg loop 6.1.1\n");
+                        PRINTK("yes, process backlog (re-lock socket)\n");
 			/* Do not sleep, just process backlog. */
 			release_sock(sk);
 			lock_sock(sk);
-                        PRINTK("recvmsg loop 6.1.2\n");
+                        PRINTK("done re-locking socket\n");
 		} else {
-                        PRINTK("recvmsg loop 6.2.1, timeo = %lu\n", timeo);
+                        PRINTK("no, sk_wait_data, timeo = %lu\n", timeo);
                         /* timeo = 10; */
 			sk_wait_data(sk, &timeo);
-                        PRINTK("recvmsg loop 6.2.2\n");
+                        PRINTK("done sk_wait_data\n");
                         LOG_SSK(sk, "woke up after waiting for data\n");
                 }
 #ifdef CONFIG_NET_DMA
@@ -1738,10 +1728,12 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 		tp->ucopy.wakeup = 0;
 #endif
 
-                PRINTK("recvmsg loop 7\n");
+                PRINTK("user_recv?\n");
 
 		if (user_recv) {
 			int chunk;
+
+                        PRINTK("yes\n");
 
 			/* __ Restore normal policy in scheduler __ */
 
@@ -1778,12 +1770,11 @@ do_prequeue:
 			peek_seq = tp->copied_seq;
 		}
 
-                PRINTK("recvmsg loop 8\n");
-
+                PRINTK("loop around\n");
 		continue;
 
 	found_ok_skb:
-                PRINTK("OK SKB, len=%d, offset=%u\n", skb->len, offset);
+                PRINTK("found_ok_skb, len=%d, offset=%u\n", skb->len, offset);
 
 		/* Ok so how much can we use? */
 		used = skb->len - offset;
@@ -1852,7 +1843,7 @@ do_prequeue:
 			}
 		}
 
-                PRINTK("recvmsg loop 9\n");
+                PRINTK("updating stats\n");
 
 		*seq += used;
 		copied += used;
@@ -1861,7 +1852,7 @@ do_prequeue:
 		serval_tcp_rcv_space_adjust(sk);
 
 skip_copy:
-                PRINTK("recvmsg loop 10\n");
+                PRINTK("skip_copy\n");
 
 		if (tp->urg_data && after(tp->copied_seq, tp->urg_seq)) {
 			tp->urg_data = 0;
@@ -1879,6 +1870,7 @@ skip_copy:
 		}
 		continue;
         found_fin_ok:
+                PRINTK("found_fin_ok\n");
                 ++*seq;
 
                 LOG_SSK(sk, "Received FIN (MSG_PEEK=%d)\n",
