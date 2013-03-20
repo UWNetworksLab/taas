@@ -1524,7 +1524,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 
 	target = sock_rcvlowat(sk, flags & MSG_WAITALL, len);
 
-        PRINTK("target = %u\n", target);
+        /* PRINTK("target = %u\n", target); */
 
 #ifdef CONFIG_NET_DMA
 	tp->ucopy.dma_chan = NULL;
@@ -1551,7 +1551,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 	do {
 		u32 offset;
 
-                PRINTK("recvmsg loop 1, len = %zd\n", len);
+                /* PRINTK("recvmsg loop 1, len = %zd\n", len); */
 
 		/* Are we at urgent data? Stop if we have read
                  * anything or have SIGURG pending. */
@@ -1572,7 +1572,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 
 		/* Next get a buffer. */
 
-                PRINTK("skb_queue_walk\n");
+                /* PRINTK("skb_queue_walk\n"); */
 
 		skb_queue_walk(&sk->sk_receive_queue, skb) {
 			/* Now that we have two receive queues this
@@ -1586,7 +1586,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 			if (tcp_hdr(skb)->syn)
 				offset--;
 
-                        PRINTK("offset=%u, len=%u\n", offset, skb->len);
+                        /* PRINTK("offset=%u, len=%u\n", offset, skb->len); */
                         
 			if (offset < skb->len)
 				goto found_ok_skb;
@@ -1604,7 +1604,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
         wait_for_event:
 		/* Well, if we have backlog, try to process it now yet. */
 
-                PRINTK("wait_for_event, copied=%d, target=%d\n", copied, target);
+                /* PRINTK("wait_for_event, copied=%d, target=%d\n", copied, target); */
 
 		if (copied >= target && !sk->sk_backlog.tail)
 			break;
@@ -1709,18 +1709,18 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 		if (tp->ucopy.dma_chan)
 			dma_async_memcpy_issue_pending(tp->ucopy.dma_chan);
 #endif
-                PRINTK("copied >= target?\n");
+                /* PRINTK("copied >= target?\n"); */
 		if (copied >= target) {
-                        PRINTK("yes, process backlog (re-lock socket)\n");
+                        /* PRINTK("yes, process backlog (re-lock socket)\n"); */
 			/* Do not sleep, just process backlog. */
 			release_sock(sk);
 			lock_sock(sk);
-                        PRINTK("done re-locking socket\n");
+                        /* PRINTK("done re-locking socket\n"); */
 		} else {
-                        PRINTK("no, sk_wait_data, timeo = %lu\n", timeo);
+                        /* PRINTK("no, sk_wait_data, timeo = %lu\n", timeo); */
                         /* timeo = 10; */
 			sk_wait_data(sk, &timeo);
-                        PRINTK("done sk_wait_data\n");
+                        /* PRINTK("done sk_wait_data\n"); */
                         LOG_SSK(sk, "woke up after waiting for data\n");
                 }
 #ifdef CONFIG_NET_DMA
@@ -1728,12 +1728,12 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 		tp->ucopy.wakeup = 0;
 #endif
 
-                PRINTK("user_recv?\n");
+                /* PRINTK("user_recv?\n"); */
 
 		if (user_recv) {
 			int chunk;
 
-                        PRINTK("yes, chunk=%d\n", len - tp->ucopy.len);
+                        /* PRINTK("yes, chunk=%d\n", len - tp->ucopy.len); */
 
 			/* __ Restore normal policy in scheduler __ */
 
@@ -1749,7 +1749,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 			if (tp->rcv_nxt == tp->copied_seq &&
 			    !skb_queue_empty(&tp->ucopy.prequeue)) {
 do_prequeue:
-                                PRINTK("do_prequeue\n");
+                                /* PRINTK("do_prequeue\n"); */
 				serval_tcp_prequeue_process(sk);
 
 				if ((chunk = len - tp->ucopy.len) != 0) {
@@ -1771,11 +1771,11 @@ do_prequeue:
 			peek_seq = tp->copied_seq;
 		}
 
-                PRINTK("loop around\n");
+                /* PRINTK("loop around\n"); */
 		continue;
 
 	found_ok_skb:
-                PRINTK("found_ok_skb, len=%d, offset=%u\n", skb->len, offset);
+                /* PRINTK("found_ok_skb, len=%d, offset=%u\n", skb->len, offset); */
 
 		/* Ok so how much can we use? */
 		used = skb->len - offset;
@@ -1844,7 +1844,7 @@ do_prequeue:
 			}
 		}
 
-                PRINTK("updating stats\n");
+                /* PRINTK("updating stats\n"); */
 
 		*seq += used;
 		copied += used;
@@ -1853,7 +1853,7 @@ do_prequeue:
 		serval_tcp_rcv_space_adjust(sk);
 
 skip_copy:
-                PRINTK("skip_copy\n");
+                /* PRINTK("skip_copy\n"); */
 
 		if (tp->urg_data && after(tp->copied_seq, tp->urg_seq)) {
 			tp->urg_data = 0;
@@ -1871,7 +1871,7 @@ skip_copy:
 		}
 		continue;
         found_fin_ok:
-                PRINTK("found_fin_ok\n");
+                /* PRINTK("found_fin_ok\n"); */
                 ++*seq;
 
                 LOG_SSK(sk, "Received FIN (MSG_PEEK=%d)\n",
@@ -1896,7 +1896,7 @@ skip_copy:
                 break;
 	} while (len > 0);
 
-        PRINTK("recvmsg after loop 1\n");
+        /* PRINTK("recvmsg after loop 1\n"); */
 
 	if (user_recv) {
 		if (!skb_queue_empty(&tp->ucopy.prequeue)) {
@@ -1920,7 +1920,7 @@ skip_copy:
 		tp->ucopy.len = 0;
 	}
 
-        PRINTK("recvmsg after loop 2\n");
+        /* PRINTK("recvmsg after loop 2\n"); */
 
 #ifdef CONFIG_NET_DMA
 	serval_tcp_service_net_dma(sk, true);  /* Wait for queue to drain */
@@ -1932,7 +1932,7 @@ skip_copy:
 	}
 #endif
 
-        PRINTK("recvmsg after loop 3\n");
+        /* PRINTK("recvmsg after loop 3\n"); */
 
 	/* According to UNIX98, msg_name/msg_namelen are ignored
 	 * on connected socket. I was just happy when found this 8) --ANK
@@ -1941,20 +1941,20 @@ skip_copy:
 	/* Clean up data we have read: This will do ACK frames. */
 	serval_tcp_cleanup_rbuf(sk, copied);
 
-        PRINTK("recvmsg done\n");
+        /* PRINTK("recvmsg done\n"); */
 
 	release_sock(sk);
         LOG_SSK(sk, "copied=%d\n", copied);
 	return copied;
 
 out:
-        PRINTK("recvmsg out\n");
+        /* PRINTK("recvmsg out\n"); */
 	release_sock(sk);
         LOG_SSK(sk, "err=%d\n", err);
 	return err;
 
 recv_urg:
-        PRINTK("recvmsg urg\n");
+        /* PRINTK("recvmsg urg\n"); */
 
 	err = serval_tcp_recv_urg(sk, msg, len, flags);
 	goto out;
