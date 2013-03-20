@@ -1783,7 +1783,7 @@ do_prequeue:
 		continue;
 
 	found_ok_skb:
-                PRINTK("OK SKB, len=%d, offset=%u", skb->len, offset);
+                PRINTK("OK SKB, len=%d, offset=%u\n", skb->len, offset);
 
 		/* Ok so how much can we use? */
 		used = skb->len - offset;
