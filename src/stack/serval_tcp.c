@@ -1733,7 +1733,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 		if (user_recv) {
 			int chunk;
 
-                        PRINTK("yes\n");
+                        PRINTK("yes, chunk=%d\n", len - tp->ucopy.len);
 
 			/* __ Restore normal policy in scheduler __ */
 
@@ -1749,6 +1749,7 @@ static int serval_tcp_recvmsg(struct kiocb *iocb, struct sock *sk,
 			if (tp->rcv_nxt == tp->copied_seq &&
 			    !skb_queue_empty(&tp->ucopy.prequeue)) {
 do_prequeue:
+                                PRINTK("do_prequeue\n");
 				serval_tcp_prequeue_process(sk);
 
 				if ((chunk = len - tp->ucopy.len) != 0) {
