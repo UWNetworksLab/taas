@@ -3094,8 +3094,8 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
 
         *sk = NULL;
 
-        PRINTK("Resolve or demux inbound packet on serviceID %s\n",
-               service_id_to_str(srvid));
+        /* PRINTK("Resolve or demux inbound packet on serviceID %s\n", */
+        /*        service_id_to_str(srvid)); */
 
         /* Match on the highest priority srvid rule, even if it's not
          * the sock TODO - use flags/prefix in resolution This should
@@ -3157,7 +3157,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                         break;
                 }
 
-                PRINTK("Forwarding to %s\n", inet_ntop(AF_INET, target->dst, mydst, 128));
+                /* PRINTK("Forwarding to %s\n", inet_ntop(AF_INET, target->dst, mydst, 128)); */
 
                 /* We only get here if we resolved on a FORWARD RULE */
                 err = SAL_RESOLVE_FORWARD;
@@ -3338,8 +3338,8 @@ static int serval_sal_resolve(struct sk_buff *skb,
 
         if (net_serval.sysctl_sal_forward) {
                 if(srvid == NULL) {
-                        PRINTK("Resolve or demux inbound packet on taas authenticator %llu\n",
-                               ctx->taas_ext->authenticator);
+                        /* PRINTK("Resolve or demux inbound packet on taas authenticator %llu\n", */
+                        /*        ctx->taas_ext->authenticator); */
 
                         memset(&mysrvid, 0, sizeof(struct service_id));
                         mysrvid.srv_un.un_id32[1] = ntohl(ctx->taas_ext->authenticator >> 32);
@@ -4243,11 +4243,10 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                         ssk->af_ops->send_check(sk, cskb);
                 }
 
-                PRINTK("Sending off with TaaS authenticator %llu\n", target->taas_auth);
+                /* PRINTK("Sending off with TaaS authenticator %llu\n", target->taas_auth); */
 
                 /* Add SAL header */
                 sh = serval_sal_build_header(sk, cskb, target->taas_auth);
-                /* sh = serval_sal_build_header(sk, cskb, 0); */
 
                 /* Compute SAL header checksum */
                 serval_sal_send_check(sh);
