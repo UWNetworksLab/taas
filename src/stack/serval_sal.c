@@ -447,9 +447,9 @@ static inline int parse_ext(struct sal_ext *ext, struct sk_buff *skb,
                 return -1;
         }
         
-        PRINTK("EXT %s length=%u\n",
-                sal_ext_name[ext->type], 
-                ext->type == SAL_PAD_EXT ? 1 : ext_len);
+        /* PRINTK("EXT %s length=%u\n", */
+        /*         sal_ext_name[ext->type],  */
+        /*         ext->type == SAL_PAD_EXT ? 1 : ext_len); */
 
         return parse_ext_func[ext->type](ext, ext_len, skb, ctx);
 }
@@ -2888,11 +2888,11 @@ int serval_sal_state_process(struct sock *sk,
         int err = 0;
 
         //#if defined(ENABLE_DEBUG)
-        {
-                char buf[512];
-                PRINTK(sk, "SAL %s\n",
-                        serval_sock_print_state(sk, buf, 512));
-        }
+        /* { */
+        /*         char buf[512]; */
+        /*         PRINTK(sk, "SAL %s\n", */
+        /*                 serval_sock_print_state(sk, buf, 512)); */
+        /* } */
         //#endif
         if (ctx->ctrl_ext) {                
                 if (!has_valid_verno(ctx->verno, sk))
@@ -3491,22 +3491,22 @@ int serval_sal_rcv(struct sk_buff *skb)
                 goto drop;
         }       
 
-        PRINTK("demux flow\n");
+        /* PRINTK("demux flow\n"); */
 
         sk = serval_sal_demux_flow(skb, &ctx);
         
         if (!sk) {
-                PRINTK("No flow, resolving on serviceID\n");
+                /* PRINTK("No flow, resolving on serviceID\n"); */
                 /* Resolve on serviceID */
                 err = serval_sal_resolve(skb, &ctx, &sk);
                 
                 switch (err) {
                 case SAL_RESOLVE_DEMUX:
-                        PRINTK("SAL DEMUX\n");
+                        /* PRINTK("SAL DEMUX\n"); */
                         break;
                 case SAL_RESOLVE_FORWARD:
                         /* Packet forwarded on out device */
-                        PRINTK("SAL FORWARD\n");
+                        /* PRINTK("SAL FORWARD\n"); */
                         return NET_RX_SUCCESS;
                 case SAL_RESOLVE_DELAY:
                         LOG_PKT("SAL DELAY\n");
@@ -4099,8 +4099,8 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
 
         LOG_SSK(sk, "Resolving service %s\n",
                 service_id_to_str(&ssk->peer_srvid));
-        PRINTK("Resolving service %s\n",
-                service_id_to_str(&ssk->peer_srvid));
+        /* PRINTK("Resolving service %s\n", */
+        /*         service_id_to_str(&ssk->peer_srvid)); */
 
         se = service_find(&ssk->peer_srvid, SERVICE_ID_MAX_PREFIX_BITS);
 
@@ -4208,7 +4208,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                         continue;
                 }
 
-/* #if defined(ENABLE_DEBUG) */
+#if defined(ENABLE_DEBUG)
                 {
                         char src[18], dst[18];
                         PRINTK("Resolved service %s with IP %s->%s " 
@@ -4220,7 +4220,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                                           dst, sizeof(dst)), 
                                 cskb->dev ? cskb->dev->name : "Undefined");
                 }
-/* #endif */
+#endif
                 /* Make sure no route is associated with the
                    socket. When IP routes a packet which is associated
                    with a socket, it will stick to that route in the
