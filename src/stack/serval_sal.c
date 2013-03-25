@@ -3157,7 +3157,7 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                         break;
                 }
 
-                /* PRINTK("Forwarding to %s\n", inet_ntop(AF_INET, target->dst, mydst, 128)); */
+                PRINTK("Forwarding to %s\n", inet_ntop(AF_INET, target->dst, mydst, 128));
 
                 /* We only get here if we resolved on a FORWARD RULE */
                 err = SAL_RESOLVE_FORWARD;
@@ -3338,8 +3338,8 @@ static int serval_sal_resolve(struct sk_buff *skb,
 
         if (net_serval.sysctl_sal_forward) {
                 if(srvid == NULL) {
-                        /* PRINTK("Resolve or demux inbound packet on taas authenticator %llu\n",  */
-                        /*        ctx->taas_ext->authenticator); */
+                        PRINTK("Resolve or demux inbound packet on taas authenticator %llu\n",
+                               ctx->taas_ext->authenticator);
 
                         memset(&mysrvid, 0, sizeof(struct service_id));
                         mysrvid.srv_un.un_id32[1] = ntohl(ctx->taas_ext->authenticator >> 32);
