@@ -4098,8 +4098,8 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
 
         LOG_SSK(sk, "Resolving service %s\n",
                 service_id_to_str(&ssk->peer_srvid));
-        /* PRINTK("Resolving service %s\n", */
-        /*         service_id_to_str(&ssk->peer_srvid)); */
+        PRINTK("Resolving service %s\n",
+                service_id_to_str(&ssk->peer_srvid));
 
         se = service_find(&ssk->peer_srvid, SERVICE_ID_MAX_PREFIX_BITS);
 
@@ -4207,10 +4207,10 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                         continue;
                 }
 
-#if defined(ENABLE_DEBUG)
+/* #if defined(ENABLE_DEBUG) */
                 {
                         char src[18], dst[18];
-                        LOG_SSK(sk, "Resolved service %s with IP %s->%s " 
+                        PRINTK(sk, "Resolved service %s with IP %s->%s " 
                                 "on device=%s\n",
                                 service_id_to_str(&ssk->peer_srvid),
                                 inet_ntop(AF_INET, &inet->inet_saddr, 
@@ -4219,7 +4219,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                                           dst, sizeof(dst)), 
                                 cskb->dev ? cskb->dev->name : "Undefined");
                 }
-#endif
+/* #endif */
                 /* Make sure no route is associated with the
                    socket. When IP routes a packet which is associated
                    with a socket, it will stick to that route in the
