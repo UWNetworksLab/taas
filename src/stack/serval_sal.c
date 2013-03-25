@@ -52,7 +52,7 @@ static struct net_addr local_addr = {
         .net_raw = { 0x7F, 0x00, 0x00, 0x01 }
 };
 
-#if 0
+#if 1
 static struct net_addr zero_addr = {
         .net_raw = { 0x00, 0x00, 0x00, 0x00 }
 };
@@ -3767,7 +3767,7 @@ out:
 	sock_put(sk);
 }
 
-#if 0
+#if 1
 static int serval_sal_do_xmit(struct sk_buff *skb)
 {
         struct sock *sk = skb->sk;
@@ -4042,7 +4042,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
          * instead, which is released in the skb's destructor.
          */
 
-#if 0
+#if 1
         /* If we are connected, transmit immediately */
         if ((1 << sk->sk_state) & (SALF_CONNECTED | 
                                    SALF_FINWAIT1 | 
