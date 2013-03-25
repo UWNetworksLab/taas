@@ -4041,7 +4041,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
          * instead, which is released in the skb's destructor.
          */
 
-#if 1
+#if 0
         /* If we are connected, transmit immediately */
         if ((1 << sk->sk_state) & (SALF_CONNECTED | 
                                    SALF_FINWAIT1 | 
