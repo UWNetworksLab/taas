@@ -447,7 +447,7 @@ static inline int parse_ext(struct sal_ext *ext, struct sk_buff *skb,
                 return -1;
         }
         
-        LOG_DBG("EXT %s length=%u\n",
+        PRINTK("EXT %s length=%u\n",
                 sal_ext_name[ext->type], 
                 ext->type == SAL_PAD_EXT ? 1 : ext_len);
 
