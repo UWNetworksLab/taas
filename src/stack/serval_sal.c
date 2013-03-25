@@ -3094,8 +3094,8 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
 
         *sk = NULL;
 
-        /* PRINTK("Resolve or demux inbound packet on serviceID %s\n",  */
-        /*        service_id_to_str(srvid)); */
+        PRINTK("Resolve or demux inbound packet on serviceID %s\n",
+               service_id_to_str(srvid));
 
         /* Match on the highest priority srvid rule, even if it's not
          * the sock TODO - use flags/prefix in resolution This should
@@ -3491,21 +3491,22 @@ int serval_sal_rcv(struct sk_buff *skb)
                 goto drop;
         }       
 
-        /* PRINTK("demux flow\n"); */
+        PRINTK("demux flow\n");
 
         sk = serval_sal_demux_flow(skb, &ctx);
         
         if (!sk) {
-                /* PRINTK("No flow, resolving on serviceID\n"); */
+                PRINTK("No flow, resolving on serviceID\n");
                 /* Resolve on serviceID */
                 err = serval_sal_resolve(skb, &ctx, &sk);
                 
                 switch (err) {
                 case SAL_RESOLVE_DEMUX:
+                        PRINTK("SAL DEMUX\n");
                         break;
                 case SAL_RESOLVE_FORWARD:
                         /* Packet forwarded on out device */
-                        LOG_PKT("SAL FORWARD\n");
+                        PRINTK("SAL FORWARD\n");
                         return NET_RX_SUCCESS;
                 case SAL_RESOLVE_DELAY:
                         LOG_PKT("SAL DELAY\n");
