@@ -52,7 +52,7 @@ static struct net_addr local_addr = {
         .net_raw = { 0x7F, 0x00, 0x00, 0x01 }
 };
 
-#if 1
+#if 0
 static struct net_addr zero_addr = {
         .net_raw = { 0x00, 0x00, 0x00, 0x00 }
 };
@@ -3766,7 +3766,7 @@ out:
 	sock_put(sk);
 }
 
-#if 1
+#if 0
 static int serval_sal_do_xmit(struct sk_buff *skb)
 {
         struct sock *sk = skb->sk;
