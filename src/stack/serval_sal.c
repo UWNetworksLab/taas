@@ -1729,7 +1729,7 @@ static int serval_sal_send_synack(struct sock *sk,
                 struct sal_source_ext *sxt;
                 ext_len = ctx->src_ext->ext_length;
 
-                PRINTK("Adding SOURCE ext to response\n");
+                /* PRINTK("Adding SOURCE ext to response\n"); */
 
                 /*
                   The SYN had a source extension, which means we were
@@ -4042,7 +4042,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
          * instead, which is released in the skb's destructor.
          */
 
-#if 0
+#if 1
         /* If we are connected, transmit immediately */
         if ((1 << sk->sk_state) & (SALF_CONNECTED | 
                                    SALF_FINWAIT1 | 
