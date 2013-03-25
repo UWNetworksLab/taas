@@ -4210,7 +4210,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
 /* #if defined(ENABLE_DEBUG) */
                 {
                         char src[18], dst[18];
-                        PRINTK(sk, "Resolved service %s with IP %s->%s " 
+                        PRINTK("Resolved service %s with IP %s->%s " 
                                 "on device=%s\n",
                                 service_id_to_str(&ssk->peer_srvid),
                                 inet_ntop(AF_INET, &inet->inet_saddr, 
