@@ -4246,8 +4246,8 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                 PRINTK("Sending off with TaaS authenticator %llu\n", target->taas_auth);
 
                 /* Add SAL header */
-                /* sh = serval_sal_build_header(sk, cskb, target->taas_auth); */
-                sh = serval_sal_build_header(sk, cskb, 0);
+                sh = serval_sal_build_header(sk, cskb, target->taas_auth);
+                /* sh = serval_sal_build_header(sk, cskb, 0); */
 
                 /* Compute SAL header checksum */
                 serval_sal_send_check(sh);
