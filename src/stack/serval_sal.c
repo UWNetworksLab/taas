@@ -127,7 +127,7 @@ static size_t max_ext_length[] = {
         [SAL_TAAS_EXT] = sizeof(struct sal_taas_ext),
 };
 
-#if defined(ENABLE_DEBUG)
+//#if defined(ENABLE_DEBUG)
 
 static char* sal_ext_name[] = {
         [SAL_PAD_EXT] =     "PAD",
@@ -303,7 +303,7 @@ static const char *sal_hdr_to_str(struct sal_hdr *sh)
         return buf;
 }
 
-#endif /* ENABLE_DEBUG */
+//#endif /* ENABLE_DEBUG */
 
 static int parse_pad_ext(struct sal_ext *ext, 
                          uint16_t ext_len,
