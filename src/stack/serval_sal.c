@@ -4042,7 +4042,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
          * instead, which is released in the skb's destructor.
          */
 
-#if 1
+#if 0
         /* If we are connected, transmit immediately */
         if ((1 << sk->sk_state) & (SALF_CONNECTED | 
                                    SALF_FINWAIT1 | 
@@ -4060,7 +4060,7 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
         }
 #endif
 
-#if 1
+#if 0
 	/* Use service id to resolve IP, unless IP is already set. */
         if (memcmp(&zero_addr, 
                    &inet_sk(sk)->inet_daddr, 
