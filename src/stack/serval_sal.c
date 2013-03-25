@@ -4049,39 +4049,6 @@ int serval_sal_transmit_skb(struct sock *sk, struct sk_buff *skb,
                                    SALF_FINWAIT2 | 
                                    SALF_CLOSING | 
                                    SALF_CLOSEWAIT)) {
-                se = service_find(&ssk->peer_srvid, SERVICE_ID_MAX_PREFIX_BITS);
-
-                if (se) {
-                        if (service_iter_init(&iter, se, 
-                                              net_serval.sysctl_resolution_mode) >= 0) {
-                                target = service_iter_next(&iter);
-                                if (target) {
-                                        char dst[18];
-                                        PRINTK("Resolved service %s with target IP %s " 
-                                               "on device=%s\n",
-                                               service_id_to_str(&ssk->peer_srvid),
-                                               inet_ntop(AF_INET, &inet->inet_daddr, 
-                                                         dst, sizeof(dst)), 
-                                               cskb->dev ? cskb->dev->name : "Undefined");
-
-                                        memcpy(&inet->inet_daddr,
-                                               target->dst,
-                                               sizeof(inet->inet_daddr) < target->dstlen ? 
-                                               sizeof(inet->inet_daddr) : target->dstlen);
-                                        if(cskb->dev != target->out.dev) {
-                                                PRINTK("Packet dev and target dev differ\n");
-                                        }
-                                        /* cskb->dev = target->out.dev; */
-                                } else {
-                                        PRINTK("No target\n");
-                                }
-                        } else {
-                                PRINTK("Error on service_iter_init\n");
-                        }
-                } else {
-                        PRINTK("Service %s not found\n", service_id_to_str(&ssk->peer_srvid));
-                }
-
                 sh = serval_sal_build_header(sk, skb, 0);
                 serval_sal_send_check(sh);
 
