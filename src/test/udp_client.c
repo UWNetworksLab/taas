@@ -24,7 +24,6 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <signal.h>
-#define __USE_BSD
 #include <sys/time.h>
 
 static unsigned short CLIENT_SERVICE_ID = 32769;
@@ -139,11 +138,11 @@ int client(void) {
 int perftest(int repeats) {
 	struct sockaddr_sv cliaddr;
 	struct sockaddr_sv srvaddr;
-	int ret = 0;
+	int ret = 0, i;
 	unsigned N = 2000;
 	char sbuf[N], rbuf[N + 1];
         struct timeval start, end, res;
-        unsigned long sum;
+        unsigned long sum = 0, min = 999999999, max = 0;
 
 	bzero(&cliaddr, sizeof(cliaddr));
 	cliaddr.sv_family = AF_SERVAL;
@@ -181,7 +180,7 @@ int perftest(int repeats) {
 		return -1;
 	}
 
-        for(int i = 0; i < repeats; i++) {
+        for(i = 0; i < repeats; i++) {
 		printf("client: sending \"%s\" to service ID %s\n", 
                        sbuf, service_id_to_str(&srvaddr.sv_srvid));
 
@@ -200,7 +199,10 @@ int perftest(int repeats) {
 
                 gettimeofday(&end, NULL);
 
-                timersub(end, start, res);
+                timersub(&end, &start, &res);
+                sum += res.tv_usec;
+                min = res.tv_usec < min ? res.tv_usec : min;
+                max = res.tv_usec > max ? res.tv_usec : max;
 
                 if (ret == -1) {
                         fprintf(stderr, "recv: %s\n", strerror_sv(errno));
@@ -208,13 +210,15 @@ int perftest(int repeats) {
                         printf("server closed\n");
                         break;
                 } else {
-                        printf("Response from server: %s, took %u us\n", rbuf, res.tv_usec);
+                        printf("Response from server: %s, took %lu us\n", rbuf, res.tv_usec);
                 }
 	}
 
 	if (close_sv(sock) < 0)
 		fprintf(stderr, "close: %s\n", 
                         strerror_sv(errno));
+
+        printf("Min/avg/max %lu/%.2f/%lu\n", min, (float)sum / (float)repeats, max);
 
         return ret;
 }
