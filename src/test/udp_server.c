@@ -80,7 +80,7 @@ int server(void)
                         char buf[N];
                         int n;
       
-                        printf("server: waiting on client request\n");
+                        /* printf("server: waiting on client request\n"); */
 
                         if ((n = recv_sv(fd, buf, N, 0)) < 0) {
                                 fprintf(stderr, 
@@ -95,20 +95,20 @@ int server(void)
                         }
                         buf[n] = '\0';
                         
-                        printf("server: request (%d bytes): %s\n", n, buf);
+                        /* printf("server: request (%d bytes): %s\n", n, buf); */
 
                         if (n > 0) {
                                 char buf2[n];
                                 int i = 0;
-                                for (; i < n; i++)
-                                        buf2[i] = toupper(buf[i]);
-                                fprintf(stderr, "server: Convert and send upcase:");
-                                for (i = 0; i < n; i++)
-                                        fprintf(stderr, "%c", buf2[i]);
-                                fprintf(stderr, "\n");
-                                send_sv(fd, buf2, n, 0);
-                                if (strcmp(buf, "quit") == 0)
-                                        break;
+                                /* for (; i < n; i++) */
+                                /*         buf2[i] = toupper(buf[i]); */
+                                /* fprintf(stderr, "server: Convert and send upcase:"); */
+                                /* for (i = 0; i < n; i++) */
+                                /*         fprintf(stderr, "%c", buf2[i]); */
+                                /* fprintf(stderr, "\n"); */
+                                send_sv(fd, buf, n, 0);
+                                /* if (strcmp(buf, "quit") == 0) */
+                                /*         break; */
                         }
                         k++;
                 } while (1);
