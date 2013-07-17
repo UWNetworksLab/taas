@@ -592,6 +592,8 @@ int main(int argc, char **argv)
                 } else if (strcmp(argv[0], "-a") == 0 ||
                            strcmp(argv[0], "--ip-address") == 0) {
                         bind_ip_address = argv[1];
+			argv++;
+			argc--;
                 } else if (strcmp(argv[0], "-dl") == 0 ||
                            strcmp(argv[0], "-l") == 0 ||
                            strcmp(argv[0], "--debug-level") == 0) {
