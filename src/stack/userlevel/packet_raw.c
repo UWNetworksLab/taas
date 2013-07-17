@@ -47,9 +47,15 @@ static int packet_raw_init(struct net_device *dev)
         /* Binding to the interface IP will stop us from receiving
            broadcast packets */
 	/* dev_get_ipv4_addr(dev, IFADDR_LOCAL, &addr.sin_addr); */
-        addr.sin_addr.s_addr = INADDR_ANY;
+        /* addr.sin_addr.s_addr = INADDR_ANY; */
+        ret = inet_aton(bind_ip_address, &addr.sin_addr);
+        if(ret == 0) {
+                LOG_ERR("Invalid IP address: %s\n", bind_ip_address);
+                close(dev->fd);
+		dev->fd = -1;
+        }
 	addr.sin_port = 0;
-	       
+
         LOG_DBG("binding to %s\n",
                 inet_ntoa(addr.sin_addr));
 

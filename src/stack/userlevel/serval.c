@@ -44,6 +44,7 @@ static char *progname = NULL;
 extern int telnet_init(void);
 extern void telnet_fini(void);
 unsigned int checksum_mode = 1;
+const char *bind_ip_address = NULL;
 
 #define MAX(x, y) (x >= y ? x : y)
 
@@ -509,7 +510,8 @@ static void print_usage()
                "-u, --udp-encap                   - Enable UDP encapsulation.\n"
                "-d, --daemon                      - Run in the background as a daemon.\n"
                "-l, --debug-level LEVEL           - Set the level of debug output.\n"
-               "-s, --sal-forward                 - Enable SAL forwarding.\n");
+               "-s, --sal-forward                 - Enable SAL forwarding.\n"
+               "-a, --ip-address                  - IP address to bind to.\n");
 }
 
 int main(int argc, char **argv)
@@ -587,6 +589,9 @@ int main(int argc, char **argv)
                 } else if (strcmp(argv[0], "-d") == 0 ||
                            strcmp(argv[0], "--daemon") == 0) {
                         daemon = 1;
+                } else if (strcmp(argv[0], "-a") == 0 ||
+                           strcmp(argv[0], "--ip-address") == 0) {
+                        bind_ip_address = argv[1];
                 } else if (strcmp(argv[0], "-dl") == 0 ||
                            strcmp(argv[0], "-l") == 0 ||
                            strcmp(argv[0], "--debug-level") == 0) {

@@ -273,6 +273,8 @@ void netdev_fini(void);
 
 int dev_get_ipv4_addr(struct net_device *dev, enum addr_type type, void *addr);
 
+extern const char *bind_ip_address;
+
 #endif /* OS_USER */
 
 #endif /* _NETDEVICE_H_ */
