@@ -283,7 +283,8 @@ int telnet_init(void)
 	memset(&inaddr, 0, sizeof(inaddr));
 	inaddr.sin_family = AF_INET;
 	inaddr.sin_port = htons(TELNET_PORT);
-	inet_pton(AF_INET, TELNET_ADDR, &inaddr.sin_addr);
+	/* inet_pton(AF_INET, TELNET_ADDR, &inaddr.sin_addr); */
+	inet_pton(AF_INET, bind_ip_address == NULL ? TELNET_ADDR : bind_ip_addr, &inaddr.sin_addr);
 	
 	ret = bind(telnet_sock, (struct sockaddr *)&inaddr, sizeof(inaddr));
 	
