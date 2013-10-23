@@ -1,0 +1,11 @@
+To build:
+
+Prerequisites: Android NDK and SDK, Ant or Eclipse with Android plugin.
+
+Run configure from top-level directory using the --with-android-sdk=/path/to/anrdoid-sdk option.
+Compile sources (to build org.servalarch.javasock.jar)
+
+Then excecute:
+
+$ /path/to/android-ndk/ndk-build -j<num CPU>
+$ ant debug (or build in Eclipse)

@@ -1,0 +1,6 @@
+Serval Java bindings
+====================
+
+Example of how to run a test application (from this directory):
+
+java -Djava.library.path=$PWD/jni/.libs/ -classpath $PWD/org.servalarch.javasock.jar org.servalarch.test.TCPServer
