@@ -89,15 +89,18 @@ static int packet_raw_init(struct net_device *dev)
 		dev->fd = -1;
 	}
 #if defined(OS_LINUX)
-	ret = setsockopt(dev->fd, SOL_SOCKET, SO_BINDTODEVICE, 
-                         dev->name, strlen(dev->name));
+        // Skip binding to eth0 -- doesn't work on Vicci nodes
+        if(strcmp(dev->name, "eth0")) {
+                ret = setsockopt(dev->fd, SOL_SOCKET, SO_BINDTODEVICE, 
+                                 dev->name, strlen(dev->name));
 
-	if (ret == -1) {
-                LOG_ERR("setsockopt SO_BINDTODEVICE failure: %s\n",
-                        strerror(errno));
-                close(dev->fd);
-		dev->fd = -1;
-	}
+                if (ret == -1) {
+                        LOG_ERR("setsockopt SO_BINDTODEVICE failure: %s\n",
+                                strerror(errno));
+                        close(dev->fd);
+                        dev->fd = -1;
+                }
+        }
 #elif defined(OS_BSD)
         /* TODO: add the BSD equivalent of SO_BINDTODEVICE */
 #endif

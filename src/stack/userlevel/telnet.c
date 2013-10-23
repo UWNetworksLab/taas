@@ -14,6 +14,8 @@ static pthread_t telnet_thread;
 static int telnet_sock = -1;
 static int pipefd[2] = { -1, -1 };
 
+extern const char *bind_ip_address;
+
 struct telnet_client {
 	int sock;
 	FILE *str;
@@ -284,7 +286,7 @@ int telnet_init(void)
 	inaddr.sin_family = AF_INET;
 	inaddr.sin_port = htons(TELNET_PORT);
 	/* inet_pton(AF_INET, TELNET_ADDR, &inaddr.sin_addr); */
-	inet_pton(AF_INET, bind_ip_address == NULL ? TELNET_ADDR : bind_ip_addr, &inaddr.sin_addr);
+	inet_pton(AF_INET, bind_ip_address == NULL ? TELNET_ADDR : bind_ip_address, &inaddr.sin_addr);
 	
 	ret = bind(telnet_sock, (struct sockaddr *)&inaddr, sizeof(inaddr));
 	
