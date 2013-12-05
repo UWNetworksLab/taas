@@ -3241,6 +3241,11 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                         /* Update destination address */
                         memcpy(&iph->daddr, target->dst, sizeof(iph->daddr));
 
+                        // change TAAS authenticator if necessary
+                        if (target->taas_auth) {
+                                serval_sal_update_taas_ext(cskb, target->taas_auth);
+                        }
+
                         /* Must recalculate transport checksum. Pull
                            to reveal transport header */
                         pskb_pull(cskb, hdr_len);
@@ -3255,11 +3260,6 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
 
                         /* Recalculate SAL checksum */
                         serval_sal_send_check(sal_hdr(cskb));
-
-                        // change TAAS authenticator if necessary
-                        if (target->taas_auth) {
-                                serval_sal_update_taas_ext(cskb, target->taas_auth);
-                        }
 
 #if defined(OS_LINUX_KERNEL)
                         /* Packet is UDP encapsulated, push back UDP
