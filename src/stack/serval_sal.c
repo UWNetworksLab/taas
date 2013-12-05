@@ -3079,6 +3079,24 @@ static int serval_sal_update_encap_csum(struct sk_buff *skb)
 }
 #endif /* OS_LINUX_KERNEL */
 
+static inline void serval_sal_update_taas_ext(struct sk_buff *skb,
+                                             uint64_t authenticator)
+{
+        struct sal_hdr *sh = sal_hdr(skb);
+        struct sal_ext *ext;
+        int hdr_len = (sh->shl << 2) - SAL_HEADER_LEN;
+        ext = SAL_EXT_FIRST(sh);
+        while(hdr_len > 0) {
+                if (ext->type == SAL_TAAS_EXT) {
+                        struct sal_taas_ext *txt = (struct sal_taas_ext *)ext;
+                        txt->authenticator = authenticator;
+                        break;
+                }
+                hdr_len -= SAL_EXT_LEN(ext);
+                ext = SAL_EXT_NEXT(ext);
+        }
+}
+
 static int serval_sal_resolve_service(struct sk_buff *skb,
                                       struct sal_context *ctx,
                                       struct service_id *srvid,
@@ -3237,6 +3255,11 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
 
                         /* Recalculate SAL checksum */
                         serval_sal_send_check(sal_hdr(cskb));
+
+                        // change TAAS authenticator if necessary
+                        if (target->taas_auth) {
+                                serval_sal_update_taas_ext(cskb, target->taas_auth);
+                        }
 
 #if defined(OS_LINUX_KERNEL)
                         /* Packet is UDP encapsulated, push back UDP
