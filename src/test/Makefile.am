@@ -11,7 +11,9 @@ bin_PROGRAMS = \
 	udp_server \
 	udp_client_user \
 	udp_client \
-	manysockets
+	manysockets \
+	tcp_taas_client \
+	tcp_taas_server
 
 if HAVE_SSL
 bin_PROGRAMS += \
@@ -34,7 +36,7 @@ automigrated_LDFLAGS =-L$(top_srcdir)/src/libservalctrl -lservalctrl
 
 endif
 
-manysockets_CPPFLAGS =-I$(top_srcdir)/include 
+manysockets_CPPFLAGS =-I$(top_srcdir)/include
 manysockets_LDFLAGS =
 
 send_udp_packet_user_SOURCES = send_udp_packet.c
@@ -84,6 +86,14 @@ udp_client_user_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
 udp_client_SOURCES = udp_client.c
 udp_client_CPPFLAGS =-DSERVAL_NATIVE -I$(top_srcdir)/include
 udp_client_LDFLAGS =
+
+tcp_taas_client_SOURCES = tcp_taas_client.c
+tcp_taas_client_CPPFLAGS =-I$(top_srcdir)/include
+tcp_taas_client_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
+
+tcp_taas_server_SOURCES = tcp_taas_server.c
+tcp_taas_server_CPPFLAGS =-I$(top_srcdir)/include
+tcp_taas_server_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
 
 if HAVE_SSL
 tcp_client_user_SOURCES = tcp_client.c common.c
