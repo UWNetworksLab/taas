@@ -12,8 +12,10 @@ bin_PROGRAMS = \
 	udp_client_user \
 	udp_client \
 	manysockets \
-	tcp_taas_client \
-	tcp_taas_server
+	udp_taas_client \
+	udp_taas_client_user \
+	udp_taas_server \
+	udp_taas_server_user
 
 if HAVE_SSL
 bin_PROGRAMS += \
@@ -77,7 +79,7 @@ udp_server_user_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
 
 udp_server_SOURCES = udp_server.c
 udp_server_CPPFLAGS =-DSERVAL_NATIVE -I$(top_srcdir)/include
-udp_server_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
+udp_server_LDFLAGS =
 
 udp_client_user_SOURCES = udp_client.c
 udp_client_user_CPPFLAGS =-I$(top_srcdir)/include
@@ -87,13 +89,21 @@ udp_client_SOURCES = udp_client.c
 udp_client_CPPFLAGS =-DSERVAL_NATIVE -I$(top_srcdir)/include
 udp_client_LDFLAGS =
 
-tcp_taas_client_SOURCES = tcp_taas_client.c
-tcp_taas_client_CPPFLAGS =-I$(top_srcdir)/include
-tcp_taas_client_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
+udp_taas_client_SOURCES = udp_taas_client.c
+udp_taas_client_CPPFLAGS =-DSERVAL_NATIVE -I$(top_srcdir)/include
+udp_taas_client_LDFLAGS =
 
-tcp_taas_server_SOURCES = tcp_taas_server.c
-tcp_taas_server_CPPFLAGS =-I$(top_srcdir)/include
-tcp_taas_server_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
+udp_taas_server_SOURCES = udp_taas_server.c
+udp_taas_server_CPPFLAGS =-DSERVAL_NATIVE -I$(top_srcdir)/include
+udp_taas_server_LDFLAGS =
+
+udp_taas_client_user_SOURCES = udp_taas_client.c
+udp_taas_client_user_CPPFLAGS =-I$(top_srcdir)/include
+udp_taas_client_user_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
+
+udp_taas_server_user_SOURCES = udp_taas_server.c
+udp_taas_server_user_CPPFLAGS =-I$(top_srcdir)/include
+udp_taas_server_user_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
 
 if HAVE_SSL
 tcp_client_user_SOURCES = tcp_client.c common.c
