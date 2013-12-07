@@ -104,7 +104,7 @@ int server(void)
                                 strtok(buf, " ");
                                 char *ip;
                                 int port;
-                                ip = strtok(, " ");
+                                ip = strtok(NULL, " ");
                                 port = atoi(strtok(NULL, " "));
                                 struct sockaddr_in backchannel_addr;
                                 memset((char*)&backchannel_addr, 0, sizeof(backchannel_addr));
