@@ -102,16 +102,16 @@ int server(void)
                         /* printf("server: request (%d bytes): %s\n", n, buf); */
                         if (n > 0) {
                                 strtok(buf, " ");
-                                char ip[40];
+                                char *ip;
                                 int port;
-                                ip = strtok(NULL, " ");
-                                port = atoi(strtok(NULL), " ");
+                                ip = strtok(, " ");
+                                port = atoi(strtok(NULL, " "));
                                 struct sockaddr_in backchannel_addr;
                                 memset((char*)&backchannel_addr, 0, sizeof(backchannel_addr));
                                 backchannel_addr.sin_family = AF_INET;
                                 backchannel_addr.sin_port = htons(port);
                                 inet_aton(ip, &backchannel_addr.sin_addr);
-                                sendto(sock, "pong", 4, 0, (struct sockaddr *)backchannel_addr, sizeof(backchannel_addr));
+                                sendto(sock, "pong", 4, 0, (struct sockaddr *)&backchannel_addr, sizeof(backchannel_addr));
                                 /* if (strcmp(buf, "quit") == 0) */
                                 /*         break; */
                         }
