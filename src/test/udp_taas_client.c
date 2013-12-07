@@ -114,7 +114,7 @@ int client(char *ip) {
                         break;
 		}
 
-		ret = recvfrom(backchannel_sock, rbuf, N, 0, (struct sockaddr *)&dummyaddr, sizeof(dummyaddr));
+		ret = recvfrom(sock_backchannel, rbuf, N, 0, (struct sockaddr *)&dummyaddr, sizeof(dummyaddr));
 		rbuf[ret] = 0;
 
                 if (ret == 0) {
