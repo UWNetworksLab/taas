@@ -56,6 +56,7 @@ int client(char *ip) {
 	struct sockaddr_sv srvaddr;
         struct sockaddr_in myaddr;
         struct sockaddr_in dummyaddr;
+        int dummysize;
 	int ret = 0;
 	unsigned N = 2000;
 	char sbuf[N];
@@ -114,7 +115,7 @@ int client(char *ip) {
                         break;
 		}
 
-		ret = recvfrom(sock_backchannel, rbuf, N, 0, (struct sockaddr *)&dummyaddr, sizeof(dummyaddr));
+		ret = recvfrom(sock_backchannel, rbuf, N, 0, (struct sockaddr *)&dummyaddr, &dummysize);
 		rbuf[ret] = 0;
 
                 if (ret == 0) {
