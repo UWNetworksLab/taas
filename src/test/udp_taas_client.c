@@ -28,6 +28,7 @@
 #include <sys/time.h>
 
 static unsigned short ECHO_SERVICE_ID = 16383;
+static unsigned short ECHO_SERVICE_ID = 4583;
 static unsigned short BACKCHANNEL_PORT = 9899;
 
 static int sock;
