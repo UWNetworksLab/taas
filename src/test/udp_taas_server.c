@@ -34,14 +34,14 @@ int server(void)
         struct sockaddr_sv servaddr, cliaddr;
         int backchannel_sock;
 
-        backchannel_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-        set_reuse_ok(backchannel_sock);
-
         if ((sock = socket_sv(AF_SERVAL, SOCK_DGRAM, SERVAL_PROTO_UDP)) < 0) {
                 fprintf(stderr, "error creating AF_SERVAL socket: %s\n",
                         strerror_sv(errno));
                 return -1;
         }
+
+        backchannel_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        set_reuse_ok(backchannel_sock);
 
         memset(&servaddr, 0, sizeof(servaddr));
         servaddr.sv_family = AF_SERVAL;
@@ -99,11 +99,12 @@ int server(void)
                         }
                         buf[n] = '\0';
 
-                        /* printf("server: request (%d bytes): %s\n", n, buf); */
+                        printf("server: request (%d bytes): %s\n", n, buf);
                         if (n > 0) {
                                 strtok(buf, " ");
                                 char *ip;
                                 int port;
+                                char *sbuf = "pong";
                                 ip = strtok(NULL, " ");
                                 port = atoi(strtok(NULL, " "));
                                 struct sockaddr_in backchannel_addr;
@@ -111,7 +112,7 @@ int server(void)
                                 backchannel_addr.sin_family = AF_INET;
                                 backchannel_addr.sin_port = htons(port);
                                 inet_aton(ip, &backchannel_addr.sin_addr);
-                                sendto(sock, "pong", 4, 0, (struct sockaddr *)&backchannel_addr, sizeof(backchannel_addr));
+                                sendto(backchannel_sock, sbuf, strlen(sbuf), 0, (struct sockaddr *)&backchannel_addr, sizeof(backchannel_addr));
                                 /* if (strcmp(buf, "quit") == 0) */
                                 /*         break; */
                         }
