@@ -34,14 +34,14 @@ int server(void)
         struct sockaddr_sv servaddr, cliaddr;
         int backchannel_sock;
 
+        backchannel_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+        set_reuse_ok(backchannel_sock);
+
         if ((sock = socket_sv(AF_SERVAL, SOCK_DGRAM, SERVAL_PROTO_UDP)) < 0) {
                 fprintf(stderr, "error creating AF_SERVAL socket: %s\n",
                         strerror_sv(errno));
                 return -1;
         }
-
-        backchannel_sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-        set_reuse_ok(backchannel_sock);
 
         memset(&servaddr, 0, sizeof(servaddr));
         servaddr.sv_family = AF_SERVAL;

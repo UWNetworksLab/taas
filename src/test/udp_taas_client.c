@@ -54,6 +54,7 @@ int set_reuse_ok(int soc)
 
 int client(char *ip) {
 	struct sockaddr_sv srvaddr;
+	struct sockaddr_sv cliaddr;
         struct sockaddr_in myaddr;
         struct sockaddr_in dummyaddr;
         int dummysize;
@@ -91,6 +92,19 @@ int client(char *ip) {
         }
 
 	set_reuse_ok(sock);
+
+	bzero(&cliaddr, sizeof(cliaddr));
+	cliaddr.sv_family = AF_SERVAL;
+	cliaddr.sv_srvid.s_sid32[0] = htonl(CLIENT_SERVICE_ID);
+
+        ret = bind_sv(sock, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
+
+	if (ret < 0) {
+		fprintf(stderr, "bind: %s\n",
+                        strerror_sv(errno));
+		return -1;
+	}
+
 
         ret = connect_sv(sock, (struct sockaddr *)&srvaddr, sizeof(srvaddr));
 
