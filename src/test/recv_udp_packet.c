@@ -11,7 +11,7 @@
 int main(int argc, char **argv)
 {
 	int sock;
-	unsigned long data = 8;
+	unsigned long data = 0;
 	ssize_t ret;
         struct {
                 struct sockaddr_sv sv;
@@ -52,6 +52,7 @@ int main(int argc, char **argv)
                service_id_to_str(&addr.sv.sv_srvid),
                inet_ntop(AF_INET, &addr.in.sin_addr, 
                          src, sizeof(src)));
+        printf("received value = %d\n", data);
 
 	return ret;
 }
