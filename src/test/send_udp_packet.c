@@ -8,12 +8,13 @@
 #include <arpa/inet.h>
 #include <netinet/serval.h>
 #include <libserval/serval.h>
+#include <netdb.h>
 
 int main(int argc, char **argv)
 {
 	int sock;
         const char *ipdst = "192.168.56.102";
-	unsigned long data = 8;
+	unsigned long data = 10;
 	ssize_t ret = 0;
         struct {
                 struct sockaddr_sv sv;
@@ -32,13 +33,29 @@ int main(int argc, char **argv)
 		goto out;
 	}
 
+        /*
+        struct addrinfo* a = NULL;
+        struct addrinfo hints;
+        memset(&hints, 0, sizeof(struct addrinfo));
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_flags = AI_PASSIVE;
+        getaddrinfo(NULL, "3900", &hints, &a);
+        struct addrinfo *res;
+        for(res = a; res != NULL; res = res->ai_next)
+                {   
+                        struct sockaddr_in* saddr = (struct sockaddr_in*)res->ai_addr;
+                        printf("hostname: %s\n", inet_ntoa(saddr->sin_addr));
+                } 
+        */
+
         memset(&addr, 0, sizeof(addr));
 	addr.sv.sv_family = AF_SERVAL;
 	addr.sv.sv_srvid.s_sid16[0] = htons(6); 
 	addr.in.sin_family = AF_INET;
 	
         if (inet_pton(AF_INET, ipdst, &addr.in.sin_addr) != 1) {
-                fprintf(stderr, "Bad advisory IP address %s\n",
+                 fprintf(stderr, "Bad advisory IP address %s\n",
                         ipdst);
                 goto out;
         }
@@ -60,7 +77,7 @@ int main(int argc, char **argv)
                ipdst);
 
 	ret = sendto_sv(sock, &data, sizeof(data), 0, 
-                        (struct sockaddr *)&addr, sizeof(addr));
+                        (struct sockaddr *)&addr, sizeof(addr.sv));
 
 	if (ret == -1) {
 		fprintf(stderr, "sendto: %s\n", strerror_sv(errno));
