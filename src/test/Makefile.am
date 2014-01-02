@@ -17,7 +17,8 @@ bin_PROGRAMS = \
 	udp_taas_server \
 	udp_taas_server_user \
 	udp_taas_client_bgpmux \
-	udp_taas_server_bgpmux
+	udp_taas_server_bgpmux \
+	taas_service
 
 if HAVE_SSL
 bin_PROGRAMS += \
@@ -103,6 +104,10 @@ udp_taas_server_bgpmux_SOURCES = udp_taas_server_bgpmux.c
 udp_taas_server_bgpmux_CPPFLAGS =-DSERVAL_NATIVE -I$(top_srcdir)/include
 udp_taas_server_bgpmux_LDFLAGS =
 
+taas_service_SOURCES = taas_service.c
+taas_service_CPPFLAGS =-DSERVAL_NATIVE -I$(top_srcdir)/include
+taas_service_LDFLAGS =
+
 udp_taas_client_bgpmux_user_SOURCES = udp_taas_client_bgpmux.c
 udp_taas_client_bgpmux_user_CPPFLAGS =-I$(top_srcdir)/include
 udp_taas_client_bgpmux_user_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
@@ -110,6 +115,10 @@ udp_taas_client_bgpmux_user_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
 udp_taas_server_bgpmux_user_SOURCES = udp_taas_server_bgpmux.c
 udp_taas_server_bgpmux_user_CPPFLAGS =-I$(top_srcdir)/include
 udp_taas_server_bgpmux_user_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
+
+taas_service_user_SOURCES = taas_service.c
+taas_service_user_CPPFLAGS =-I$(top_srcdir)/include
+taas_service_user_LDFLAGS =-L$(top_srcdir)/src/libserval -lserval
 
 udp_taas_server_SOURCES = udp_taas_server.c
 udp_taas_server_CPPFLAGS =-DSERVAL_NATIVE -I$(top_srcdir)/include
