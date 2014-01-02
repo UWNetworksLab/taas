@@ -1,143 +1,60 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
-// Copyright (c) 2010 The Trustees of Princeton University (Trustees)
-
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and/or hardware specification (the “Work”) to deal
-// in the Work without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or
-// sell copies of the Work, and to permit persons to whom the Work is
-// furnished to do so, subject to the following conditions: The above
-// copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Work.
-
-// THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-// THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
-// OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
-// ARISING FROM, OUT OF OR IN CONNECTION WITH THE WORK OR THE USE OR OTHER
-// DEALINGS IN THE WORK.
-
-/* this taas service collects a new rule to install in its service table from the client
-whenever the client wishes to use taas. The client sends a service id and the next hop 
-ip address for that service id*/
-
-#include <libserval/serval.h>
-#include <netinet/serval.h>
+#include <stdio.h>
+#include <string.h>
 #include <errno.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <unistd.h>
-
-static unsigned short SERVICE_ID = 7;
-
-int set_reuse_ok(int sock);
-
-int server(void)
-{
-        int sock, backlog = 8;;
-        struct sockaddr_sv servaddr, cliaddr;  
-    
-        if ((sock = socket_sv(AF_SERVAL, SOCK_DGRAM, SERVAL_PROTO_UDP)) < 0) {
-                fprintf(stderr, "error creating AF_SERVAL socket: %s\n", 
-                        strerror_sv(errno));
-                return -1;
-        }
-  
-        memset(&servaddr, 0, sizeof(servaddr));
-        servaddr.sv_family = AF_SERVAL;
-        servaddr.sv_srvid.s_sid32[0] = htonl(SERVICE_ID);
-  
-        set_reuse_ok(sock);
-  
-        if (bind_sv(sock, (struct sockaddr *)&servaddr, 
-                    sizeof(servaddr)) < 0) {
-                fprintf(stderr, "error binding socket: %s\n", 
-                        strerror_sv(errno));
-                close_sv(sock);
-                return -1;
-        }
-        
-        printf("server: bound to service id %d\n", SERVICE_ID);
-        memset(&cliaddr, 0, sizeof(cliaddr));
-
-        listen_sv(sock, backlog);
-
-        do {
-                socklen_t l = sizeof(cliaddr);
-
-                printf("calling accept\n");
-
-                int fd = accept_sv(sock, (struct sockaddr *)&cliaddr, &l);
-
-                if (fd < 0) {
-                        fprintf(stderr, "error accepting new conn %s\n", 
-                                strerror_sv(errno));
-                        return -1;
-                }
-
-                printf("server: recv conn from service id %s; got fd = %d\n",
-                       service_id_to_str(&cliaddr.sv_srvid), fd);
-        
-
-                do {
-                        unsigned N = 2000;
-                        char buf[N];
-                        int n;
-      
-                        /* printf("server: waiting on client request\n"); */
-
-                        if ((n = recv_sv(fd, buf, N, 0)) < 0) {
-                                fprintf(stderr, 
-                                        "server: error receiving client request: %s\n",
-                                        strerror_sv(errno));
-                                break;
-                        }
-                        if (n == 0) {
-                                fprintf(stderr, "server: received EOF; "
-                                        "listening for new conns\n");
-                                break;
-                        }
-                        buf[n] = '\0';
-                        
-                        printf("server: request (%d bytes): %s\n", n, buf);
-
-                        if (n > 0) {
-                                char buf2[n];
-                                int i = 0;
-                                /* for (; i < n; i++) */
-                                /*         buf2[i] = toupper(buf[i]); */
-                                /* fprintf(stderr, "server: Convert and send upcase:"); */
-                                /* for (i = 0; i < n; i++) */
-                                /*         fprintf(stderr, "%c", buf2[i]); */
-                                /* fprintf(stderr, "\n"); */
-                                //send_sv(fd, buf, n, 0);
-                                /* if (strcmp(buf, "quit") == 0) */
-                                /*         break; */
-                        }
-                } while (1);
-                close_sv(fd);
-                printf("Server listening for NEW connections\n");
-        } while (1);
-        close_sv(sock);
-
-        printf("Exiting\n");
-
-        return -1;
-}
-
-int set_reuse_ok(int sock)
-{
-        int option = 1;
-        if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, 
-                       &option, sizeof(option)) < 0) {
-                fprintf(stderr, "proxy setsockopt error");
-                return -1;
-        }
-        return 0;
-}
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+#include <netinet/serval.h>
+#include <libserval/serval.h>
 
 int main(int argc, char **argv)
 {
-        return server();
+	int sock;
+	unsigned long data = 0;
+	ssize_t ret;
+        struct {
+                struct sockaddr_sv sv;
+                struct sockaddr_in in;
+        } addr;
+	socklen_t addrlen = sizeof(addr);
+	char src[18];
+
+	sock = socket_sv(AF_SERVAL, SOCK_DGRAM, 0);
+
+	if (sock == -1) { 
+		fprintf(stderr, "could not create SERVAL socket: %s\n",
+			strerror(errno));
+		return -1;
+	}
+
+        memset(&addr, 0, sizeof(addr));
+	addr.sv.sv_family = AF_SERVAL;
+	addr.sv.sv_srvid.s_sid32[0] = htonl(7); 
+	addr.in.sin_family = AF_INET;
+
+	ret = bind_sv(sock, (struct sockaddr *)&addr, sizeof(addr.sv));
+	
+	if (ret == -1) {
+		fprintf(stderr, "bind: %s\n", strerror_sv(errno));
+		return -1;
+	}
+
+        while (1) {
+                ret = recvfrom_sv(sock, &data, sizeof(data), 0, 
+                                  (struct sockaddr *)&addr, &addrlen);
+		
+                if (ret == -1) {
+                        fprintf(stderr, "recvfrom: %s\n", strerror_sv(errno));
+                        return -1;
+                }
+
+                printf("Received a %zd byte packet from \'%s\' at %s\n", ret,
+                       service_id_to_str(&addr.sv.sv_srvid),
+                       inet_ntop(AF_INET, &addr.in.sin_addr, 
+                                 src, sizeof(src)));
+                printf("received value = %d\n", data);
+        }
+
+	return ret;
 }
