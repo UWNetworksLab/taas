@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+ /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 // Copyright (c) 2010 The Trustees of Princeton University (Trustees)
 
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,16 +28,16 @@
 #include <sys/time.h>
 
 
-#define SENDBUF_SIZE (sizeof(char) * 1460)
+#define SENDBUF_SIZE (sizeof(char) * 1200)
 static unsigned long dest_service_id;
 static unsigned long taas_service_id;
 static char* taas_ip;
 static int num_packets;
 static char* filepath;
 
-static unsigned short CLIENT_SERVICE_ID = 4583;
+static unsigned long CLIENT_SERVICE_ID = 100;
 
-static int sock;
+static int sock, sock1;
 
 void signal_handler(int sig)
 {
@@ -87,6 +87,15 @@ int client() {
 
 	set_reuse_ok(sock);
 
+        sock1 = socket_sv(AF_SERVAL, SOCK_DGRAM, SERVAL_PROTO_UDP);
+        if (sock == -1) {
+                fprintf(stderr, "socket: %s\n",
+                        strerror_sv(errno));
+                return -1;
+        }
+
+	set_reuse_ok(sock1);
+
         ret = bind_sv(sock, (struct sockaddr *) &cliaddr, sizeof(cliaddr));
 	if (ret < 0) {
 		fprintf(stderr, "bind: %s\n",
@@ -94,22 +103,15 @@ int client() {
 		return -1;
 	}
 
+        /*
+        int data = 5;
+        ret = sendto_sv(sock1, &data, sizeof(data), 0, 
+                        (struct sockaddr *)&taasSrvAddr, sizeof(taasSrvAddr));
 
-        ret = connect_sv(sock, (struct sockaddr *)&destSrvAddr, sizeof(destSrvAddr));
-	if (ret < 0) {
-		fprintf(stderr, "connect: %s\n",
-			strerror_sv(errno));
-		return -1;
+	if (ret == -1) {
+		fprintf(stderr, "sendto: %s\n", strerror_sv(errno));
 	}
-	printf("connected to original destination service\n");
-
-        ret = connect_sv(sock, (struct sockaddr *)&taasSrvAddr, sizeof(taasSrvAddr));
-	if (ret < 0) {
-		fprintf(stderr, "connect: %s\n",
-			strerror_sv(errno));
-		return -1;
-	}
-	printf("connected to taas service\n");
+        */
 
         f = fopen(filepath, "r");
         if (!f) {
@@ -141,7 +143,8 @@ int client() {
 
                 int count = 0;
                 while (count < nread) {
-                        n = send_sv(sock, sbuf + count, nread - count, 0);
+                        n = sendto_sv(sock, sbuf + count, nread - count, 0,
+                                      (struct sockaddr *)&destSrvAddr, sizeof(destSrvAddr));
 
                         if (n < 0) {
                                 fprintf(stderr, "\rerror sending data: %s\n",
@@ -152,7 +155,7 @@ int client() {
                         total_bytes += n;
                 }
 
-                ret = recv_sv(sock, rbuf, N, 0);
+                //ret = recv_sv(sock, rbuf, N, 0);
                 sleep(1);
 	}
 
@@ -177,8 +180,9 @@ int main(int argc, char **argv)
 	//sigaction(SIGINT, &action, 0);
 
         //taas service installs the forwarding rule that the client sends to it
+        //taas_ip is the ip address that the taas service will forward the packet to
         if (argc != 6) {
-                printf("Usage: udp_taas_client destination_service_id taas_service_id taas_address num_packets filepath\n");
+                printf("Usage: udp_taas_client destination_service_id taas_service_id taas_ip num_packets filepath\n");
                 exit(0);
         }
         dest_service_id = atoi(argv[1]);
