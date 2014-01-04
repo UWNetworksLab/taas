@@ -25,17 +25,19 @@
 #include <unistd.h>
 
 int set_reuse_ok(int sock);
-#define RECVBUF_SIZE (sizeof(char) * 1460)
+#define RECVBUF_SIZE (sizeof(char) * 1200)
 static unsigned long sid;
 static char* filepath;
 
 int server()
 {
-        int sock, backlog = 8;;
+        int sock;
         struct sockaddr_sv servaddr, cliaddr;
         static size_t total_bytes = 0;
         char rbuf[RECVBUF_SIZE];
         FILE *f;
+
+	socklen_t addrlen = sizeof(cliaddr);
     
         if ((sock = socket_sv(AF_SERVAL, SOCK_DGRAM, SERVAL_PROTO_UDP)) < 0) {
                 fprintf(stderr, "error creating AF_SERVAL socket: %s\n", 
@@ -60,65 +62,42 @@ int server()
         printf("server: bound to service id %d\n", sid);
         memset(&cliaddr, 0, sizeof(cliaddr));
 
-        f = fopen(filepath, "r");
+        f = fopen(filepath, "w");
         if (!f) {
                 fprintf(stderr, "cannot open file %s : %s\n",
                         filepath, strerror_sv(errno));
                 return -1;
         }
 
-        listen_sv(sock, backlog);
-
-        do {
-                socklen_t l = sizeof(cliaddr);
-
-                printf("calling accept\n");
-
-                int fd = accept_sv(sock, (struct sockaddr *)&cliaddr, &l);
-
-                if (fd < 0) {
-                        fprintf(stderr, "error accepting new conn %s\n", 
-                                strerror_sv(errno));
+        int n;
+        while (1) {
+                n = recvfrom_sv(sock, rbuf, RECVBUF_SIZE, 0, 
+                                  (struct sockaddr *)&cliaddr, &addrlen);
+		
+                if (n == -1) {
+                        fprintf(stderr, "recvfrom: %s\n", strerror_sv(errno));
                         return -1;
                 }
 
-                printf("server: recv conn from service id %s; got fd = %d\n",
-                       service_id_to_str(&cliaddr.sv_srvid), fd);
-        
+                if (n == 0) {
+                        fprintf(stderr, "server: received EOF");
+                        break;
+                }
 
-                do {
-                        int n;
-                        if ((n = recv_sv(fd, rbuf, RECVBUF_SIZE, 0)) < 0) {
-                                fprintf(stderr, 
-                                        "server: error receiving client request: %s\n",
-                                        strerror_sv(errno));
-                                break;
-                        }
-                        if (n == 0) {
-                                fprintf(stderr, "server: received EOF; "
-                                        "listening for new conns\n");
-                                break;
-                        }
-                        rbuf[n] = '\0';
-                        total_bytes += n;
-                        size_t nwrite = fwrite(rbuf, sizeof(char), RECVBUF_SIZE, f);
-                        if (nwrite < RECVBUF_SIZE) {
-                                fprintf(stderr, "\rError writing file\n");
-                                return -1;
-                                
-                        }
-                        if (n > 0) {
-                                char buf2[10];
-                                send_sv(fd, buf2, 10, 0);
-                        }
-                } while (1);
-                close_sv(fd);
-                printf("Server listening for NEW connections\n");
-        } while (1);
+                printf("Received a %zd byte packet from \'%s\' \n", n,
+                       service_id_to_str(&cliaddr.sv_srvid));
+
+                rbuf[n] = '\0';
+                total_bytes += n;
+                size_t nwrite = fwrite(rbuf, sizeof(char), RECVBUF_SIZE, f);
+                if (nwrite < RECVBUF_SIZE) {
+                        fprintf(stderr, "\rError writing file\n");
+                        return -1;        
+                }
+                fflush(f);
+        }
+
         close_sv(sock);
-
-        printf("Exiting\n");
-
         return -1;
 }
 
