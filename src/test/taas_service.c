@@ -8,11 +8,8 @@
 #include <netinet/serval.h>
 #include <libserval/serval.h>
 
-
-int install_rule(char *sid, char *forwarding_ip)
+int install_rule(char *action, char *sid, char *forwarding_ip)
 {
-        char cmd_string[200];
-        char o[1000];
 
         /*
         char cwd[1024];
@@ -21,10 +18,13 @@ int install_rule(char *sid, char *forwarding_ip)
         else
                 perror("getcwd() error");
         */
+        char cmd_string[200];
+        char o[1000];
 
-        //first delete the rule
         memset(cmd_string, 0, sizeof(cmd_string));
-        strcat(cmd_string, "./src/tools/serv service del ");
+        strcat(cmd_string, "./src/tools/serv service ");
+        strcat(cmd_string, action);
+        strcat(cmd_string, " ");
         strcat(cmd_string, sid);
         strcat(cmd_string, " ");
         strcat(cmd_string, forwarding_ip);
@@ -33,27 +33,11 @@ int install_rule(char *sid, char *forwarding_ip)
         fgets(o, sizeof(char)*sizeof(o), cmd);
         pclose(cmd);
         printf("%s\n", o);
-        if (strstr(o, "delete") == 0)
+        if (strstr(o, action) == 0)
                 return -1;
 
-        //now add the rule
-        memset(cmd_string, 0, sizeof(cmd_string));
-        strcat(cmd_string, "./src/tools/serv service add ");
-        strcat(cmd_string, sid);
-        strcat(cmd_string, " ");
-        strcat(cmd_string, forwarding_ip);
-
-        cmd = popen(cmd_string, "r");
-        fgets(o, sizeof(char)*sizeof(o), cmd);
-        pclose(cmd);
-        printf("%s\n", o);
-        if (strstr(o, "add") == 0)
-                return -1;
-        
         return 0;
 }
-
-
 
 int main(int argc, char **argv)
 {
@@ -106,8 +90,14 @@ int main(int argc, char **argv)
                 printf("received service id = %s\n", input_rule.sid);
                 printf("received forwarding ip = %s\n", input_rule.forward_ip);
 
-                //install rule
-                ret = install_rule(input_rule.sid, input_rule.forward_ip);
+                //first delete, and then add
+                ret = install_rule("del", input_rule.sid, input_rule.forward_ip);
+                if (ret == -1) {
+                        fprintf(stderr, "error installing the rule\n");
+                        return -1;
+                }
+
+                ret = install_rule("add", input_rule.sid, input_rule.forward_ip);
                 if (ret == -1) {
                         fprintf(stderr, "error installing the rule\n");
                         return -1;
