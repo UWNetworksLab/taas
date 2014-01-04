@@ -1,8 +1,8 @@
- /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 // Copyright (c) 2010 The Trustees of Princeton University (Trustees)
 
 // Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and/or hardware specification (the “Work”) to deal
+// copy of this software and/or hardware specification (the “Work”)
 // in the Work without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or
 // sell copies of the Work, and to permit persons to whom the Work is
@@ -29,9 +29,13 @@
 
 
 #define SENDBUF_SIZE (sizeof(char) * 1200)
+#define NUM_PINGS "3"
 static unsigned long dest_service_id;
+static char *dest_service_id_str;
 static unsigned long taas_service_id;
-static char* taas_ip;
+static char* taas_ip;   //required for failover forwarding
+static char* taas_forwarding_ip;  //telling taas service where to forwrad packets to
+static char* dest_ip;   //required for failure detection
 static int num_packets;
 static char* filepath;
 
@@ -44,7 +48,7 @@ void signal_handler(int sig)
         printf("signal caught! closing socket...\n");
         //close(sock);
 }
-
+  
 int set_reuse_ok(int soc)
 {
 	int option = 1;
@@ -57,6 +61,31 @@ int set_reuse_ok(int soc)
 	return 0;
 }
 
+int doFailureDetection()
+{
+        char cmd_string[100];
+        char o[200];
+
+        memset(cmd_string, 0, sizeof(cmd_string));
+        strcat(cmd_string, "ping -c ");
+        strcat(cmd_string, NUM_PINGS);
+        strcat(cmd_string, " ");
+        strcat(cmd_string, dest_ip);
+        strcat(cmd_string, " | grep icmp");
+
+        FILE *cmd = popen(cmd_string, "r");
+        int i, num_failures = 0;
+        for (i = 0; i < atoi(NUM_PINGS); i++) {
+                fgets(o, sizeof(char)*sizeof(o), cmd);
+                if (strstr(o, "time") == 0)
+                        num_failures++;
+        }
+        pclose(cmd);
+        if (num_failures > 0)
+                return -1;
+        return 0;
+}
+
 int client() {
 	struct sockaddr_sv destSrvAddr, taasSrvAddr, cliaddr;
 	int ret = 0, i, n;
@@ -65,6 +94,17 @@ int client() {
         int stop_sending = 0;
 	char sbuf[SENDBUF_SIZE], rbuf[N+1];
         FILE *f;
+        int failureDetected = 0; 
+
+        struct {
+                char padding[10];
+                char sid[10];
+                char forward_ip[20];
+        } taas_rule;
+
+        memset(&taas_rule, 0, sizeof(taas_rule));
+        strcat(taas_rule.sid, dest_service_id_str);
+        strcat(taas_rule.forward_ip, taas_forwarding_ip);
 
 	bzero(&destSrvAddr, sizeof(destSrvAddr));
 	destSrvAddr.sv_family = AF_SERVAL;
@@ -102,16 +142,6 @@ int client() {
                         strerror_sv(errno));
 		return -1;
 	}
-
-        /*
-        int data = 5;
-        ret = sendto_sv(sock1, &data, sizeof(data), 0, 
-                        (struct sockaddr *)&taasSrvAddr, sizeof(taasSrvAddr));
-
-	if (ret == -1) {
-		fprintf(stderr, "sendto: %s\n", strerror_sv(errno));
-	}
-        */
 
         f = fopen(filepath, "r");
         if (!f) {
@@ -155,8 +185,24 @@ int client() {
                         total_bytes += n;
                 }
 
-                //ret = recv_sv(sock, rbuf, N, 0);
-                sleep(1);
+                //sleep(1);
+                //do failure detection here
+                if (doFailureDetection() == -1) {
+                        //failure detected => start forwarding to taas service
+                        //first tell taas service to install the appropriate rule
+
+                        if (failureDetected) {
+                        }
+                        ret = sendto_sv(sock1, &taas_rule, sizeof(taas_rule), 0, 
+                                        (struct sockaddr *)&taasSrvAddr, sizeof(taasSrvAddr));
+                        if (ret == -1) {
+                                fprintf(stderr, "sendto: %s\n", strerror_sv(errno));
+                        }
+                        failureDetected = 1;
+
+                        //rule sent to the taas service, now install the taas rule in own service table
+                        
+                }
 	}
 
 	if (close_sv(sock) < 0)
@@ -181,15 +227,19 @@ int main(int argc, char **argv)
 
         //taas service installs the forwarding rule that the client sends to it
         //taas_ip is the ip address that the taas service will forward the packet to
-        if (argc != 6) {
-                printf("Usage: udp_taas_client destination_service_id taas_service_id taas_ip num_packets filepath\n");
+        //taas_forwarding ip is the ip address that the client tells that taas service to its rule
+        if (argc != 8) {
+                printf("Usage: udp_taas_client destination_service_id taas_service_id dest_ip taas_ip taas_forwading_ip num_packets filepath\n");
                 exit(0);
         }
         dest_service_id = atoi(argv[1]);
+        dest_service_id_str = argv[1];
         taas_service_id = atoi(argv[2]);
-        taas_ip = argv[3];
-        num_packets = atoi(argv[4]);
-        filepath =  argv[5];
+        dest_ip = argv[3];
+        taas_ip = argv[4];
+        taas_forwarding_ip = argv[5];
+        num_packets = atoi(argv[6]);
+        filepath =  argv[7];
 
         ret = client();
 
