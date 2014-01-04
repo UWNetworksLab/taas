@@ -29,7 +29,8 @@
 
 
 #define SENDBUF_SIZE (sizeof(char) * 1200)
-#define NUM_PINGS "3"
+#define NUM_PINGS "1"
+#define SLEEP_INTERVAL 100000  //in microseconds
 static unsigned long dest_service_id;
 static char *dest_service_id_str;
 static unsigned long taas_service_id;
@@ -43,10 +44,39 @@ static unsigned long CLIENT_SERVICE_ID = 100;
 
 static int sock, sock1;
 
-void signal_handler(int sig)
+static void signal_handler(int sig)
 {
-        printf("signal caught! closing socket...\n");
-        //close(sock);
+        if (install_rule("del", dest_service_id_str, taas_ip) == -1) {
+                fprintf(stderr, "error installing the rule\n");
+        }
+        if (install_rule("add", dest_service_id_str, dest_ip) == -1) {
+                fprintf(stderr, "error installing the rule\n");
+        }
+        signal(sig, SIG_DFL);
+        raise(sig);
+}
+
+int install_rule(char *action, char *sid, char *forwarding_ip)
+{
+        char cmd_string[200];
+        char o[1000];
+
+        memset(cmd_string, 0, sizeof(cmd_string));
+        strcat(cmd_string, "./src/tools/serv service ");
+        strcat(cmd_string, action);
+        strcat(cmd_string, " ");
+        strcat(cmd_string, sid);
+        strcat(cmd_string, " ");
+        strcat(cmd_string, forwarding_ip);
+
+        FILE *cmd = popen(cmd_string, "r");
+        fgets(o, sizeof(char)*sizeof(o), cmd);
+        pclose(cmd);
+        printf("%s\n", o);
+        if (strstr(o, action) == 0)
+                return -1;
+        
+        return 0;
 }
   
 int set_reuse_ok(int soc)
@@ -61,7 +91,7 @@ int set_reuse_ok(int soc)
 	return 0;
 }
 
-int doFailureDetection()
+int doFailureDetection(char* ip)
 {
         char cmd_string[100];
         char o[200];
@@ -70,7 +100,7 @@ int doFailureDetection()
         strcat(cmd_string, "ping -c ");
         strcat(cmd_string, NUM_PINGS);
         strcat(cmd_string, " ");
-        strcat(cmd_string, dest_ip);
+        strcat(cmd_string, ip);
         strcat(cmd_string, " | grep icmp");
 
         FILE *cmd = popen(cmd_string, "r");
@@ -90,9 +120,7 @@ int client() {
 	struct sockaddr_sv destSrvAddr, taasSrvAddr, cliaddr;
 	int ret = 0, i, n;
         static size_t total_bytes = 0;
-	unsigned N = 2000;
         int stop_sending = 0;
-	char sbuf[SENDBUF_SIZE], rbuf[N+1];
         FILE *f;
         int failureDetected = 0; 
 
@@ -101,6 +129,11 @@ int client() {
                 char sid[10];
                 char forward_ip[20];
         } taas_rule;
+
+        struct {
+                int num;
+                char sbuf[SENDBUF_SIZE];
+        } payload;
 
         memset(&taas_rule, 0, sizeof(taas_rule));
         strcat(taas_rule.sid, dest_service_id_str);
@@ -157,7 +190,7 @@ int client() {
 		printf("client: sending packet %d to service ID %s\n",
                        i, service_id_to_str(&destSrvAddr.sv_srvid));
 
-                size_t nread = fread(sbuf, sizeof(char), SENDBUF_SIZE, f);
+                size_t nread = fread(payload.sbuf, sizeof(char), SENDBUF_SIZE, f);
 
                 if (nread < SENDBUF_SIZE) {
                         if (feof(f) != 0) {
@@ -171,11 +204,21 @@ int client() {
 
                 printf("Read %zu bytes from file %s\n", nread, filepath);
 
+                payload.num = i;
+                n = sendto_sv(sock, &payload, sizeof(payload), 0,
+                              (struct sockaddr *)&destSrvAddr, sizeof(destSrvAddr));
+                if (n < 0) {
+                        fprintf(stderr, "\rerror sending data: %s\n",
+                                strerror_sv(errno));
+                        return -1;
+                }
+                total_bytes += n;
+
+                /*
                 int count = 0;
                 while (count < nread) {
                         n = sendto_sv(sock, sbuf + count, nread - count, 0,
                                       (struct sockaddr *)&destSrvAddr, sizeof(destSrvAddr));
-
                         if (n < 0) {
                                 fprintf(stderr, "\rerror sending data: %s\n",
                                         strerror_sv(errno));
@@ -184,26 +227,44 @@ int client() {
                         count =+ n;
                         total_bytes += n;
                 }
+                */
 
-                //sleep(1);
                 //do failure detection here
-                if (doFailureDetection() == -1) {
+                if (!failureDetected) {
+                        ret = doFailureDetection(dest_ip);
+                        if (ret == -1) {
                         //failure detected => start forwarding to taas service
                         //first tell taas service to install the appropriate rule
 
-                        if (failureDetected) {
-                        }
-                        ret = sendto_sv(sock1, &taas_rule, sizeof(taas_rule), 0, 
-                                        (struct sockaddr *)&taasSrvAddr, sizeof(taasSrvAddr));
-                        if (ret == -1) {
-                                fprintf(stderr, "sendto: %s\n", strerror_sv(errno));
-                        }
-                        failureDetected = 1;
-
+                                failureDetected = 1;
+                                ret = sendto_sv(sock1, &taas_rule, sizeof(taas_rule), 0, 
+                                                (struct sockaddr *)&taasSrvAddr, sizeof(taasSrvAddr));
+                                if (ret == -1) {
+                                        fprintf(stderr, "sendto: %s\n", strerror_sv(errno));
+                                }
                         //rule sent to the taas service, now install the taas rule in own service table
-                        
+                                //first delete the old rule, then install the new rule
+                                ret = install_rule("del", dest_service_id_str, dest_ip);
+                                if (ret == -1) {
+                                        fprintf(stderr, "error installing the rule\n");
+                                        return -1;
+                                }
+
+                                ret = install_rule("add", dest_service_id_str, taas_ip);
+                                if (ret == -1) {
+                                        fprintf(stderr, "error installing the rule\n");
+                                        return -1;
+                                }
+
+                                //installed all rules, now wait for them to take effect
+                                //sleep(1);
+                        }
                 }
-	}
+
+                //failure detected, switched to taas => no more failure detection so sleep for a bit
+                if (failureDetected)
+                        usleep(SLEEP_INTERVAL);                
+        }
 
 	if (close_sv(sock) < 0)
 		fprintf(stderr, "close: %s\n",
@@ -223,10 +284,10 @@ int main(int argc, char **argv)
 	/* The server should shut down on these signals. */
         //sigaction(SIGTERM, &action, 0);
 	//sigaction(SIGHUP, &action, 0);
-	//sigaction(SIGINT, &action, 0);
+	sigaction(SIGINT, &action, 0);
 
         //taas service installs the forwarding rule that the client sends to it
-        //taas_ip is the ip address that the taas service will forward the packet to
+        //taas_ip is the ip address that the taas service resides at; client will install the rule with this ip on detecting failure
         //taas_forwarding ip is the ip address that the client tells that taas service to its rule
         if (argc != 8) {
                 printf("Usage: udp_taas_client destination_service_id taas_service_id dest_ip taas_ip taas_forwading_ip num_packets filepath\n");
@@ -244,6 +305,13 @@ int main(int argc, char **argv)
         ret = client();
 
         printf("client done..\n");
+        //make rules to default position
+        if (install_rule("del", dest_service_id_str, taas_ip) == -1) {
+                fprintf(stderr, "error installing the rule\n");
+        }
+        if (install_rule("add", dest_service_id_str, dest_ip) == -1) {
+                fprintf(stderr, "error installing the rule\n");
+        }
 
         return ret;
 }
