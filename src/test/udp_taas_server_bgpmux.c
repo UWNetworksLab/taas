@@ -61,6 +61,7 @@ int server()
         
         printf("server: bound to service id %d\n", sid);
         memset(&cliaddr, 0, sizeof(cliaddr));
+        //memset(rbuf, 0, RECVBUF_SIZE);
 
         f = fopen(filepath, "w");
         if (!f) {
@@ -87,7 +88,7 @@ int server()
                 printf("Received a %zd byte packet from \'%s\' \n", n,
                        service_id_to_str(&cliaddr.sv_srvid));
 
-                rbuf[n] = '\0';
+                //rbuf[n] = '\0';
                 total_bytes += n;
                 size_t nwrite = fwrite(rbuf, sizeof(char), RECVBUF_SIZE, f);
                 if (nwrite < RECVBUF_SIZE) {
