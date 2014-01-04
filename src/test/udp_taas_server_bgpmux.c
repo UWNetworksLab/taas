@@ -34,8 +34,12 @@ int server()
         int sock;
         struct sockaddr_sv servaddr, cliaddr;
         static size_t total_bytes = 0;
-        char rbuf[RECVBUF_SIZE];
         FILE *f;
+
+        struct {
+                int num;
+                char rbuf[RECVBUF_SIZE];
+        } payload;
 
 	socklen_t addrlen = sizeof(cliaddr);
     
@@ -61,7 +65,6 @@ int server()
         
         printf("server: bound to service id %d\n", sid);
         memset(&cliaddr, 0, sizeof(cliaddr));
-        //memset(rbuf, 0, RECVBUF_SIZE);
 
         f = fopen(filepath, "w");
         if (!f) {
@@ -72,7 +75,8 @@ int server()
 
         int n;
         while (1) {
-                n = recvfrom_sv(sock, rbuf, RECVBUF_SIZE, 0, 
+
+                n = recvfrom_sv(sock, &payload, sizeof(payload), 0, 
                                   (struct sockaddr *)&cliaddr, &addrlen);
 		
                 if (n == -1) {
@@ -85,12 +89,12 @@ int server()
                         break;
                 }
 
-                printf("Received a %zd byte packet from \'%s\' \n", n,
+                printf("Received a %zd byte packet number %d from \'%s\' \n", n, payload.num, 
                        service_id_to_str(&cliaddr.sv_srvid));
 
                 //rbuf[n] = '\0';
                 total_bytes += n;
-                size_t nwrite = fwrite(rbuf, sizeof(char), RECVBUF_SIZE, f);
+                size_t nwrite = fwrite(payload.rbuf, sizeof(char), RECVBUF_SIZE, f);
                 if (nwrite < RECVBUF_SIZE) {
                         fprintf(stderr, "\rError writing file\n");
                         return -1;        
