@@ -26,6 +26,7 @@
 typedef uint32_t socklen_t;
 
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
+int inet_pton(int af, const char *src, void *dst);
 
 #endif /* OS_LINUX_KERNEL */
 
