@@ -82,6 +82,7 @@ struct arguments {
         unsigned int weight;
         unsigned short prefix_bits;
         uint64_t taas_auth;
+        struct in_addr nat_src_addr, *ipN;
 };
 
 static int service_parse_args(int argc, char **argv, void **result)
@@ -253,6 +254,26 @@ static int service_parse_args(int argc, char **argv, void **result)
 
                         argc--;
                         argv++;
+                } else if (strcmp("nat_src_addr", argv[0]) == 0) {
+                        
+                        if (argc < 2) {
+                                fprintf(stderr, "No nat source address given\n");
+                                return -1;
+                        }
+                        
+                        ret = name_to_inet_addr(argv[1], &args.nat_src_addr);
+
+                        if (ret != 1) {
+                                fprintf(stderr, "Bad IP address: '%s'\n",
+                                        argv[1]);
+                                return -1;
+                        }
+                        
+                        args.ipN = &args.nat_src_addr;
+                        
+                        argc--;
+                        argv++;
+                        
                 } else {
                         ret = name_to_inet_addr(argv[0], &args.ipaddr2);
                         
@@ -268,14 +289,19 @@ static int service_parse_args(int argc, char **argv, void **result)
         }
         {
                 char buf[18];
-                printf("%s %s:%u %s priority=%u weight=%u, taas=%llu\n",
+                char nat[18];
+                if (args.ipN)
+                        inet_ntop(AF_INET, args.ipN, nat, 18);
+                        
+                printf("%s %s:%u %s priority=%u weight=%u, taas=%llu, nat source address= %s\n",
                        opnames[args.op].long_name,
                        service_id_to_str(&args.srvid), 
                        args.prefix_bits, 
                        inet_ntop(AF_INET, &args.ipaddr1, buf, 18),
                        args.priority,
                        args.weight,
-                       args.taas_auth);
+                       args.taas_auth,
+                       nat);
         }
         
         *result = &args;
@@ -295,7 +321,7 @@ static int service_execute(struct hostctrl *hctl, void *in_args)
                                            &args->srvid, 
                                            args->prefix_bits, 
                                            args->priority, 
-                                           args->weight, args->ip1, args->taas_auth);
+                                           args->weight, args->ip1, args->taas_auth, args->ipN);
                 break;
         case SERVICE_OP_DEL:
                 ret = hostctrl_service_remove(hctl, args->type, &args->srvid, 

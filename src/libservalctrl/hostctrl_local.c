@@ -14,7 +14,8 @@ static int local_service_generic(struct hostctrl *hc,
                                  unsigned int priority,
                                  unsigned int weight,
                                  const struct in_addr *ipaddr,
-                                 uint64_t taas_auth)
+                                 uint64_t taas_auth,
+                                 const struct in_addr *nat_src_ipaddr)
 {
     struct {
 		struct ctrlmsg_service cm;
@@ -40,6 +41,9 @@ static int local_service_generic(struct hostctrl *hc,
 
     if (ipaddr)
         memcpy(&req.cm.service[0].address, ipaddr, sizeof(*ipaddr));
+
+    if (nat_src_ipaddr)
+        memcpy(&req.cm.service[0].nat_src_address, nat_src_ipaddr, sizeof(*nat_src_ipaddr));
         
     req.cm.service[0].if_index = -1;
 
@@ -61,11 +65,12 @@ static int local_service_add(struct hostctrl *hc,
                              unsigned int priority,
                              unsigned int weight,
                              const struct in_addr *ipaddr,
-                             uint64_t taas_auth)
+                             uint64_t taas_auth,
+                             const struct in_addr *nat_src_ipaddr)
 {
 	return local_service_generic(hc, CTRLMSG_TYPE_ADD_SERVICE,
                                  type, srvid, prefix_bits, priority, 
-                                 weight, ipaddr, taas_auth);
+                                 weight, ipaddr, taas_auth, nat_src_ipaddr);
 }
 
 static int local_service_remove(struct hostctrl *hc, 

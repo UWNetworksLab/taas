@@ -59,6 +59,7 @@ struct service_info {
         uint32_t hard_timeout; /* Max time before discarding (seconds). */
         struct in_addr address;
         struct service_id srvid;
+        struct in_addr nat_src_address;
 } CTRLMSG_PACKED;
 
 CTRLMSG_ASSERT(sizeof(struct service_info) == 68)
