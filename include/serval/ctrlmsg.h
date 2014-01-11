@@ -62,7 +62,7 @@ struct service_info {
         struct in_addr nat_src_address;
 } CTRLMSG_PACKED;
 
-CTRLMSG_ASSERT(sizeof(struct service_info) == 68)
+CTRLMSG_ASSERT(sizeof(struct service_info) == 72)
 
 struct service_info_stat {
         struct service_info service;
@@ -75,7 +75,7 @@ struct service_info_stat {
         uint32_t tokens_consumed;
 } CTRLMSG_PACKED;
 
-CTRLMSG_ASSERT(sizeof(struct service_info_stat) == 96)
+CTRLMSG_ASSERT(sizeof(struct service_info_stat) == 100)
 
 struct service_stat {
         uint32_t capabilities;

@@ -81,7 +81,7 @@ static int local_service_remove(struct hostctrl *hc,
 {
 	return local_service_generic(hc, CTRLMSG_TYPE_DEL_SERVICE, 
                                  type, srvid, prefix_bits, 
-                                 0, 0, ipaddr, 0);
+                                 0, 0, ipaddr, 0, NULL);
 }
 
 static int local_service_modify(struct hostctrl *hc, 
@@ -136,7 +136,7 @@ static int local_service_get(struct hostctrl *hc,
 {
 	return local_service_generic(hc, CTRLMSG_TYPE_GET_SERVICE,
                                  SERVICE_RULE_UNDEFINED, srvid, prefix_bits, 
-                                 0, 0, ipaddr, 0);
+                                 0, 0, ipaddr, 0, NULL);
 }
 
 static int local_service_register_dummy(struct hostctrl *hc, 
