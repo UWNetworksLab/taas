@@ -3247,6 +3247,8 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                         //do nat for src address if specified in the rule table
                         char mysrc[128];
                         PRINTK("nat_set: %d, nat_src_addr: %s\n", target->nat_set, inet_ntop(AF_INET, &target->nat_src_addr, mysrc, 128));
+                        if (target->nat_set)
+                                memcpy(&iph->saddr, &target->nat_src_addr, sizeof(iph->saddr));
                         
                         // change TAAS authenticator if necessary
                         if (target->taas_auth) {
@@ -3354,7 +3356,6 @@ static int serval_sal_resolve(struct sk_buff *skb,
                               struct sal_context *ctx,
                               struct sock **sk)
 {
-        PRINTK("in serval_sal_resolve\n");
         int ret = SAL_RESOLVE_NO_MATCH;
         struct service_id *srvid = NULL, mysrvid;
 
