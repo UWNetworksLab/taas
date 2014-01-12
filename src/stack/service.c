@@ -83,8 +83,9 @@ static const char *protocol_to_str(int protocol)
 }
 
 static struct target *target_create(service_rule_type_t type,
-                                    const void *dst, int dstlen,
-                                    const union target_out out, 
+                                    const void *dst, int dstlen, uint8_t nat_set,
+                                    const void *nat_src_addr,
+                                     const union target_out out, 
                                     uint32_t weight, uint64_t taas_auth,
                                     gfp_t alloc) 
 {
@@ -103,6 +104,9 @@ static struct target *target_create(service_rule_type_t type,
         t->weight = weight;
         t->taas_auth = taas_auth;
         t->dstlen = dstlen;
+        t->nat_set = nat_set;
+        if (nat_set > 0)
+                memcpy(&t->nat_src_addr, nat_src_addr, sizeof(t->nat_src_addr));
 
         if (dstlen > 0) {
                 if (out.raw != NULL) {
@@ -307,7 +311,7 @@ static int __service_entry_add_target(struct service_entry *se,
                                       service_rule_type_t type,
                                       uint16_t flags, uint32_t priority,
                                       uint32_t weight, uint64_t taas_auth, const void *dst, 
-                                      int dstlen, const union target_out out, 
+                                      int dstlen, uint8_t nat_set, const void *nat_src_addr, const union target_out out, 
                                       gfp_t alloc) 
 {
         struct target_set *set = NULL;
@@ -327,7 +331,7 @@ static int __service_entry_add_target(struct service_entry *se,
                 return 0;
         }
         
-        t = target_create(type, dst, dstlen, out, weight, taas_auth, alloc);
+        t = target_create(type, dst, dstlen, nat_set, nat_src_addr, out, weight, taas_auth, alloc);
 
         if (!t)
                 return -ENOMEM;
@@ -354,7 +358,7 @@ static int __service_entry_add_target(struct service_entry *se,
 int service_entry_add_target(struct service_entry *se, 
                              service_rule_type_t type, uint16_t flags, 
                              uint32_t priority, uint32_t weight, uint64_t taas_auth,
-                             const void *dst, int dstlen, 
+                             const void *dst, int dstlen, uint8_t nat_set, const void *nat_src_addr,   
                              const union target_out out, gfp_t alloc) 
 {
         int ret = 0;
@@ -367,7 +371,7 @@ int service_entry_add_target(struct service_entry *se,
            new memory is allocated before we lock the table.
         */
         ret = __service_entry_add_target(se, type, flags, priority, 
-                                         weight, taas_auth, dst, dstlen, 
+                                         weight, taas_auth, dst, dstlen, nat_set, nat_src_addr,
                                          out, GFP_ATOMIC);
         write_unlock_bh(&se->lock);
 
@@ -905,6 +909,7 @@ static int __service_entry_print(struct bst_node *n, char *buf,
         struct target_set *set;
         struct target *t;
         char dststr[18]; /* Currently sufficient for IPv4 */
+        char natstr[18];
         int len = 0, tot_len = 0;
         unsigned int bits = 0;
 
@@ -945,13 +950,17 @@ static int __service_entry_print(struct bst_node *n, char *buf,
                         } else if (t->type == SERVICE_RULE_FORWARD && 
                                    t->out.dev) {
                                 len = snprintf(buf + tot_len, buflen, 
-                                               "%-5s %-8llu %s\n",
+                                               "%-8s %-8llu %-16s %-4d %s\n",
                                                t->out.dev ? 
                                                t->out.dev->name : "any",
                                                t->taas_auth,
                                                inet_ntop(AF_INET,
                                                          t->dst, 
-                                                         dststr, 18));
+                                                         dststr, 18),
+                                               t->nat_set,
+                                               inet_ntop(AF_INET,
+                                                         &t->nat_src_addr, 
+                                                         natstr, 18));
                         } else {
                                 len = snprintf(buf + tot_len, buflen, 
                                                "-\n");
@@ -1008,9 +1017,10 @@ int __service_table_print(char *buf, size_t buflen)
                 buflen -= len;
 #endif
         len = snprintf(buf + tot_len, buflen, 
-                       "%-64s %-4s %-4s %-5s %-6s %-6s %-8s %-7s %-8s %s\n", 
+                       "%-64s %-4s %-4s %-5s %-6s %-6s %-8s %-7s %-8s %-8s %-16s %-4s %s\n", 
                        "prefix", "bits", "type", "flags", "prio", "weight", 
-                       "resolved", "dropped", "TaaSauth", "target(s)");
+                       "resolved", "dropped", "device", "TaaSauth", "target(s)", 
+                       "NAT_set", "NAT_src_addr");
         
         tot_len += len;
         
@@ -1282,7 +1292,9 @@ static int service_table_add(struct service_table *tbl,
                              uint32_t weight, 
                              uint64_t taas_auth,
                              const void *dst,
-                             int dstlen, 
+                             int dstlen,
+                             uint8_t nat_set,
+                             const void *nat_src_addr,
                              const union target_out out, 
                              gfp_t alloc) {
         struct service_entry *se;
@@ -1350,7 +1362,7 @@ static int service_table_add(struct service_table *tbl,
                         ret = __service_entry_add_target(get_service(n),
                                                          type,
                                                          flags, priority, 
-                                                         weight, taas_auth, dst, dstlen,
+                                                         weight, taas_auth, dst, dstlen, nat_set, nat_src_addr,
                                                          out, GFP_ATOMIC);
                 }
                 goto out;
@@ -1365,7 +1377,7 @@ static int service_table_add(struct service_table *tbl,
 
         
         ret = __service_entry_add_target(se, type, flags, priority, 
-                                         weight, taas_auth, dst, dstlen, out,
+                                         weight, taas_auth, dst, dstlen, nat_set, nat_src_addr, out,
                                          GFP_ATOMIC);
         
         if (ret < 0) {
@@ -1408,13 +1420,15 @@ int service_add(struct service_id *srvid,
                 uint32_t weight, 
                 uint64_t taas_auth,
                 const void *dst, 
-                int dstlen, 
+                int dstlen,
+                uint8_t nat_set,
+                const void *nat_src_addr,
                 const union target_out out, 
                 gfp_t alloc) 
 {
         return service_table_add(&srvtable, srvid, prefix_bits, 
                                  type, flags, priority, 
-                                 weight == 0 ? 1 : weight, taas_auth, dst, dstlen,
+                                 weight == 0 ? 1 : weight, taas_auth, dst, dstlen, nat_set, nat_src_addr, 
                                  out, alloc);
 }
 

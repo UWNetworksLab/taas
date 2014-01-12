@@ -122,6 +122,8 @@ struct target {
         atomic_t packets_dropped;
         union target_out out;
         int dstlen;
+        int nat_set;
+        struct in_addr nat_src_addr;
         unsigned char dst[0]; /* Must be last */
 };
 
@@ -153,6 +155,8 @@ int service_entry_add_target(struct service_entry *se,
                              uint64_t taas_auth,
                              const void *dst,
                              int dstlen,
+                             uint8_t nat_set,
+                             const void *nat_src_addr,
                              const union target_out out,
                              gfp_t alloc);
 
@@ -191,7 +195,7 @@ unsigned char service_get_prefix_bits(const struct service_entry *se);
 int service_add(struct service_id *srvid, uint16_t prefix_bits,
                 service_rule_type_t type,
                 uint16_t flags, uint32_t priority, uint32_t weight, uint64_t taas_auth,
-		const void *dst, int dstlen, const union target_out out, 
+		const void *dst, int dstlen, uint8_t nat_set, const void *nat_src_addr, const union target_out out, 
                 gfp_t alloc);
 
 int service_modify(struct service_id *srvid, uint16_t prefix_bits,

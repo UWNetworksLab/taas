@@ -101,6 +101,11 @@ int serval_ipv4_forward_out(struct sk_buff *skb)
                         inet_ntop(AF_INET, &iph->saddr, srcstr, 18),
                         inet_ntop(AF_INET, &iph->daddr, dststr, 18),
                         skb->len, iph->ihl << 2, iph->tos);
+                PRINTK("%s %s->%s skb->len=%u iph_len=[%u] %u\n",
+                        skb->dev ? skb->dev->name : "no dev",
+                        inet_ntop(AF_INET, &iph->saddr, srcstr, 18),
+                        inet_ntop(AF_INET, &iph->daddr, dststr, 18),
+                        skb->len, iph->ihl << 2, iph->tos);
         }
 #endif
 	skb->protocol = htons(ETH_P_IP);
@@ -116,6 +121,7 @@ int serval_ipv4_forward_out(struct sk_buff *skb)
         
         if (err < 0) {
                 LOG_ERR("Could not forward SAL packet, NO route [err=%d]\n", err);
+                PRINTK("Could not forward SAL packet, NO route [err=%d]\n", err);
                 kfree_skb(skb);
                 return NET_RX_DROP;
         }
@@ -142,7 +148,22 @@ int serval_ipv4_forward_out(struct sk_buff *skb)
            eventually call dst_output, after having updated TTL, etc.
         */
 #if defined(OS_LINUX_KERNEL)
+        
+        char srcstr[18], dststr[18];
+        PRINTK("just before handing off packet to the kernel in (serval_ipv4_forward_out): %s %s->%s skb->len=%u iph_len=[%u] %u\n",
+               skb->dev ? skb->dev->name : "no dev",
+               inet_ntop(AF_INET, &iph->saddr, srcstr, 18),
+               inet_ntop(AF_INET, &iph->daddr, dststr, 18),
+               skb->len, iph->ihl << 2, iph->tos);
+
+
         err = dst_input(skb);
+
+        PRINTK("just after handing off packet to the kernel in (serval_ipv4_forward_out): %s %s->%s skb->len=%u iph_len=[%u] %u\n",
+               skb->dev ? skb->dev->name : "no dev",
+               inet_ntop(AF_INET, &iph->saddr, srcstr, 18),
+               inet_ntop(AF_INET, &iph->daddr, dststr, 18),
+               skb->len, iph->ihl << 2, iph->tos);
 #else
         err = dev_queue_xmit(skb);
 #endif

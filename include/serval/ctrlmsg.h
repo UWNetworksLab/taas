@@ -59,10 +59,11 @@ struct service_info {
         uint32_t hard_timeout; /* Max time before discarding (seconds). */
         struct in_addr address;
         struct service_id srvid;
+        uint8_t nat_set;
         struct in_addr nat_src_address;
 } CTRLMSG_PACKED;
 
-CTRLMSG_ASSERT(sizeof(struct service_info) == 72)
+CTRLMSG_ASSERT(sizeof(struct service_info) == 73)
 
 struct service_info_stat {
         struct service_info service;
@@ -75,7 +76,7 @@ struct service_info_stat {
         uint32_t tokens_consumed;
 } CTRLMSG_PACKED;
 
-CTRLMSG_ASSERT(sizeof(struct service_info_stat) == 100)
+CTRLMSG_ASSERT(sizeof(struct service_info_stat) == 101)
 
 struct service_stat {
         uint32_t capabilities;

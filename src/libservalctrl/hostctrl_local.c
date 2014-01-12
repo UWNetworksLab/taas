@@ -42,17 +42,23 @@ static int local_service_generic(struct hostctrl *hc,
     if (ipaddr)
         memcpy(&req.cm.service[0].address, ipaddr, sizeof(*ipaddr));
 
-    if (nat_src_ipaddr)
+    if (nat_src_ipaddr) {
+        req.cm.service[0].nat_set = 1;
         memcpy(&req.cm.service[0].nat_src_address, nat_src_ipaddr, sizeof(*nat_src_ipaddr));
+    } else
+        req.cm.service[0].nat_set = 0;
         
     req.cm.service[0].if_index = -1;
 
 	/* strncpy(req.cm.ifname, ifname, IFNAMSIZ - 1); */
         
-    LOG_DBG("op=%d prefix_bits=%u len=%u sizeof(req)=%zu %zu %s\n",      
+    char nat[18];
+    LOG_DBG("op=%d prefix_bits=%u len=%u sizeof(req)=%zu %zu nat set: %d nat src: %s %s\n",      
             msgtype, req.cm.service[0].srvid_prefix_bits, 
             CTRLMSG_SERVICE_LEN(&req.cm), sizeof(req), 
             CTRLMSG_SERVICE_NUM(&req.cm),
+            req.cm.service[0].nat_set,
+            inet_ntop(AF_INET, &req.cm.service[0].nat_src_address, nat, 18),
             service_id_to_str(&req.cm.service[0].srvid));
 
 	return message_channel_send(hc->mc, &req.cm, req.cm.cmh.len);

@@ -3102,6 +3102,8 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                                       struct service_id *srvid,
                                       struct sock **sk)
 {
+        PRINTK("in serval_sal_resolve_service\n");
+
         struct service_entry* se = NULL;
         struct service_iter iter;
         struct target *target = NULL;
@@ -3239,8 +3241,13 @@ static int serval_sal_resolve_service(struct sk_buff *skb,
                         hdr_len += ret;
 
                         /* Update destination address */
+                        PRINTK("Forwarding to %s\n", inet_ntop(AF_INET, target->dst, mydst, 128));
                         memcpy(&iph->daddr, target->dst, sizeof(iph->daddr));
 
+                        //do nat for src address if specified in the rule table
+                        char mysrc[128];
+                        PRINTK("nat_set: %d, nat_src_addr: %s\n", target->nat_set, inet_ntop(AF_INET, &target->nat_src_addr, mysrc, 128));
+                        
                         // change TAAS authenticator if necessary
                         if (target->taas_auth) {
                                 serval_sal_update_taas_ext(cskb, target->taas_auth);
@@ -3347,6 +3354,7 @@ static int serval_sal_resolve(struct sk_buff *skb,
                               struct sal_context *ctx,
                               struct sock **sk)
 {
+        PRINTK("in serval_sal_resolve\n");
         int ret = SAL_RESOLVE_NO_MATCH;
         struct service_id *srvid = NULL, mysrvid;
 
@@ -3469,6 +3477,12 @@ int serval_sal_rcv(struct sk_buff *skb)
                         skb->len,
                         inet_ntop(AF_INET, &iph->saddr, src, 18),
                         inet_ntop(AF_INET, &iph->daddr, dst, 18));
+
+                PRINTK("in serval_sal_rcv skb->len=%u : %s -> %s\n",
+                       skb->len,
+                       inet_ntop(AF_INET, &iph->saddr, src, 18),
+                       inet_ntop(AF_INET, &iph->daddr, dst, 18));
+
         }
 #endif
 

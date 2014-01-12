@@ -76,6 +76,8 @@ struct net_device *resolve_dev_impl(const struct in_addr *addr,
 #else
         dev = rt->u.dst.dev;
 #endif
+
+        
         dev_hold(dev);
         ip_rt_put(rt);
         
@@ -105,13 +107,16 @@ static int dev_configuration(struct net_device *dev)
                         LOG_DBG("dev %s bc=%s\n", 
                                 dev->name, 
                                 inet_ntop(AF_INET, &dst, buf, 16));
+                        PRINTK("dev %s bc=%s\n", 
+                                dev->name, 
+                                inet_ntop(AF_INET, &dst, buf, 16));
                 }
 #endif
                 service_add(&default_service, 0, SERVICE_RULE_FORWARD, 0, 
                             BROADCAST_SERVICE_DEFAULT_PRIORITY,
                             BROADCAST_SERVICE_DEFAULT_WEIGHT, 
                             0,
-                            &dst, sizeof(dst), make_target(dev), 
+                            &dst, sizeof(dst), 0, NULL, make_target(dev), 
                             GFP_ATOMIC);
         } 
         return ret;

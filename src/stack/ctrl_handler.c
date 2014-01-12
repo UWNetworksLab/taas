@@ -70,6 +70,9 @@ static int ctrl_handle_add_service_msg(struct ctrlmsg *cm, int peer)
 
         LOG_DBG("adding %u services, msg size %u\n", 
                 num_res, CTRLMSG_SERVICE_LEN(cmr));
+
+        PRINTK("adding %u services, msg size %u\n", 
+                num_res, CTRLMSG_SERVICE_LEN(cmr));
         
         for (i = 0; i < num_res; i++) {
                 struct net_device *dev = NULL;
@@ -83,6 +86,7 @@ static int ctrl_handle_add_service_msg(struct ctrlmsg *cm, int peer)
                                 continue;
                 }
 
+                PRINTK("dev name (in ctrl_handle_add_service_msg): %s\n", dev->name);
                 if (entry->srvid_prefix_bits > 0)
                         prefix_bits = entry->srvid_prefix_bits;
          
@@ -96,6 +100,17 @@ static int ctrl_handle_add_service_msg(struct ctrlmsg *cm, int peer)
                                 inet_ntop(AF_INET, &entry->address,
                                           ipstr, sizeof(ipstr)),
                                 entry->priority, entry->weight);
+
+                        PRINTK("Adding service id: %s(%u) "
+                                "@ address %s, priority %u, weight %u, nat_set %d nat_source_address %s\n", 
+                                service_id_to_str(&entry->srvid), 
+                                prefix_bits, 
+                                inet_ntop(AF_INET, &entry->address,
+                                          ipstr, sizeof(ipstr)),
+                               entry->priority, entry->weight,
+                               entry->nat_set,
+                               inet_ntop(AF_INET, &entry->nat_src_address,
+                                         ipstr, sizeof(ipstr)));
                 }
 #endif
                 err = service_add(&entry->srvid, 
@@ -107,6 +122,8 @@ static int ctrl_handle_add_service_msg(struct ctrlmsg *cm, int peer)
                                   entry->taas_auth,
                                   &entry->address, 
                                   sizeof(entry->address),
+                                  entry->nat_set,
+                                  &entry->nat_src_address,
                                   make_target(dev), GFP_KERNEL);
                 if (dev)
                         dev_put(dev);
