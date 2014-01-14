@@ -19,4 +19,18 @@ int timeval_sub(struct timeval *res, struct timeval *x, struct timeval *y);
 };
 #endif
 
+typedef struct 
+{
+  int id;
+  unsigned long sid;
+  char *ip;
+} mailbox;
+
+#define SENDBUF_SIZE (sizeof(char) * 1200)
+
+typedef struct {
+  int num;
+  char sbuf[SENDBUF_SIZE];
+} payload;
+
 #endif

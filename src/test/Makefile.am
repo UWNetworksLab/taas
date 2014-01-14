@@ -18,7 +18,8 @@ bin_PROGRAMS = \
 	udp_taas_server_user \
 	udp_taas_client_bgpmux \
 	udp_taas_server_bgpmux \
-	taas_service
+	taas_service \
+	phalanx_client
 
 if HAVE_SSL
 bin_PROGRAMS += \
@@ -107,6 +108,10 @@ udp_taas_server_bgpmux_LDFLAGS =
 taas_service_SOURCES = taas_service.c
 taas_service_CPPFLAGS =-DSERVAL_NATIVE -I$(top_srcdir)/include
 taas_service_LDFLAGS =
+
+phalanx_client_SOURCES = phalanx_client.c
+phalanx_client_CPPFLAGS =-DSERVAL_NATIVE -I$(top_srcdir)/include
+phalanx_client_LDFLAGS =
 
 udp_taas_client_bgpmux_user_SOURCES = udp_taas_client_bgpmux.c
 udp_taas_client_bgpmux_user_CPPFLAGS =-I$(top_srcdir)/include
