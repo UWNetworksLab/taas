@@ -27,7 +27,7 @@
 #include <signal.h>
 #include <sys/time.h>
 #include "common.h"
-#include "../../list/src/list.h"
+#include "../../list-master/src/list.h"
 
 
 #define NUM_PINGS "1"
