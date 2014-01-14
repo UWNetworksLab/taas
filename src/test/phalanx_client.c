@@ -169,6 +169,7 @@ int client(mailbox *m, int num_mailboxes) {
                 printf("Read %zu bytes from file %s\n", nread, filepath);
 
                 p.num = i;
+                p.type = DATA;
                 n = sendto_sv(sock, &p, sizeof(payload), 0,
                               (struct sockaddr *)&addr[mbox_idx], sizeof(addr[mbox_idx]));
                 if (n < 0) {
