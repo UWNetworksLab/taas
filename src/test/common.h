@@ -27,8 +27,10 @@ typedef struct
 } mailbox;
 
 #define BUF_SIZE (sizeof(char) * 1200)
+typedef enum {DATA,REQUEST} packet_type_t;
 
 typedef struct {
+  packet_type_t type;
   int num;
   char sbuf[BUF_SIZE];
 } payload;
