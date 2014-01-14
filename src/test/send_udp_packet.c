@@ -70,7 +70,7 @@ int main(int argc, char **argv)
                 goto out;
         }
 
-	addr.sv.sv_srvid.s_sid16[0] = htons(7);
+	addr.sv.sv_srvid.s_sid32[0] = htonl(10);
         
         printf("Sending to \'%s\' %s\n",
                service_id_to_str(&addr.sv.sv_srvid),

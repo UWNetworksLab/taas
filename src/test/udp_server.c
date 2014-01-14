@@ -24,7 +24,7 @@
 #include <ctype.h>
 #include <unistd.h>
 
-static unsigned short ECHO_SERVICE_ID = 16385;
+static unsigned short ECHO_SERVICE_ID = 7;
 
 int set_reuse_ok(int sock);
 
@@ -54,6 +54,7 @@ int server(void)
         }
         
         printf("server: bound to service id %d\n", ECHO_SERVICE_ID);
+        memset(&cliaddr, 0, sizeof(cliaddr));
 
         listen_sv(sock, backlog);
 
@@ -95,7 +96,7 @@ int server(void)
                         }
                         buf[n] = '\0';
                         
-                        /* printf("server: request (%d bytes): %s\n", n, buf); */
+                        printf("server: request (%d bytes): %s\n", n, buf);
 
                         if (n > 0) {
                                 char buf2[n];

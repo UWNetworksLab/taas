@@ -17,6 +17,9 @@ int main(int argc, char **argv)
                 struct sockaddr_sv sv;
                 struct sockaddr_in in;
         } addr;
+
+        struct sockaddr_sv servaddr;
+
 	socklen_t addrlen = sizeof(addr);
 	char src[18];
 
@@ -30,8 +33,12 @@ int main(int argc, char **argv)
 
         memset(&addr, 0, sizeof(addr));
 	addr.sv.sv_family = AF_SERVAL;
-	addr.sv.sv_srvid.s_sid16[0] = htons(7); 
+	addr.sv.sv_srvid.s_sid32[0] = htonl(7); 
 	addr.in.sin_family = AF_INET;
+
+        memset(&servaddr, 0, sizeof(servaddr));
+	servaddr.sv_family = AF_SERVAL;
+	servaddr.sv_srvid.s_sid32[0] = htonl(7);
 
 	ret = bind_sv(sock, (struct sockaddr *)&addr, sizeof(addr.sv));
 	
@@ -53,6 +60,13 @@ int main(int argc, char **argv)
                inet_ntop(AF_INET, &addr.in.sin_addr, 
                          src, sizeof(src)));
         printf("received value = %d\n", data);
+
+        ret = sendto_sv(sock, &data, sizeof(data), 0, 
+                        (struct sockaddr *)&servaddr, sizeof(servaddr));
+
+	if (ret == -1) {
+		fprintf(stderr, "sendto: %s\n", strerror_sv(errno));
+	}
 
 	return ret;
 }
