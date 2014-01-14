@@ -154,9 +154,9 @@ int client(mailbox *m, int num_mailboxes) {
 		printf("client: sending packet %d to service ID %s at mailbox %d %s\n",
                        i, service_id_to_str(&addr[mbox_idx].sv_srvid), m[mbox_idx].id, m[mbox_idx].ip);
 
-                size_t nread = fread(p.sbuf, sizeof(char), SENDBUF_SIZE, f);
+                size_t nread = fread(p.sbuf, sizeof(char), BUF_SIZE, f);
 
-                if (nread < SENDBUF_SIZE) {
+                if (nread < BUF_SIZE) {
                         if (feof(f) != 0) {
                                 stop_sending = 1;
                                 printf("\rEOF reached, file successfully sent\n");

@@ -26,11 +26,11 @@ typedef struct
   char *ip;
 } mailbox;
 
-#define SENDBUF_SIZE (sizeof(char) * 1200)
+#define BUF_SIZE (sizeof(char) * 1200)
 
 typedef struct {
   int num;
-  char sbuf[SENDBUF_SIZE];
+  char sbuf[BUF_SIZE];
 } payload;
 
 #endif
