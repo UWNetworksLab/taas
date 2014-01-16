@@ -100,21 +100,22 @@ int doFailureDetection(char* ip)
         return 0;
 }
 
-int client(mailbox *m, int num_mailboxes) {
+int client(list_t *mboxList) {
 
-        struct sockaddr_sv *addr = (struct sockaddr_sv **)calloc(num_mailboxes, sizeof(struct sockaddr_sv));
+        struct sockaddr_sv *addr = (struct sockaddr_sv *)calloc(mboxList->len, sizeof(struct sockaddr_sv));
         
 	struct sockaddr_sv cliaddr;
+        mailbox *m;
 	int ret = 0, i, n, mbox_idx;
         static size_t total_bytes = 0;
         int stop_sending = 0;
         FILE *f;
         int failureDetected = 0;
 
-        
-        for (i=0; i < num_mailboxes; i++) {
+        for (i=0; i < mboxList->len; i++) {
+                m = (mailbox*)(list_at(mboxList,i)->val);
                 addr[i].sv_family = AF_SERVAL;
-                addr[i].sv_srvid.s_sid32[0] = htonl(m[i].sid);
+                addr[i].sv_srvid.s_sid32[0] = htonl(m->sid);
         }
 
         bzero(&cliaddr, sizeof(cliaddr));
@@ -147,12 +148,12 @@ int client(mailbox *m, int num_mailboxes) {
 
         payload p;
         for (i = 0; i < num_packets; i++) {
-
                 if (stop_sending)
                         break;
-                mbox_idx = i % num_mailboxes;
+                mbox_idx = i % mboxList->len;
+                m = (mailbox*)(list_at(mboxList,mbox_idx)->val);
 		printf("client: sending packet %d to service ID %s at mailbox %d %s\n",
-                       i, service_id_to_str(&addr[mbox_idx].sv_srvid), m[mbox_idx].id, m[mbox_idx].ip);
+                       i, service_id_to_str(&addr[mbox_idx].sv_srvid), m->id, m->ip);
 
                 size_t nread = fread(p.sbuf, sizeof(char), BUF_SIZE, f);
 
@@ -213,23 +214,29 @@ int main(int argc, char **argv)
 
         int num_mailboxes = atoi(argv[1]);
         mailbox *m = (mailbox*)calloc(num_mailboxes, sizeof(mailbox));
-        //list_t *list = list_new();
+        list_t *mboxList = list_new();
+        list_node_t *ml;
         for (i=0; i < num_mailboxes; i++) {
                 m[i].id = i;
                 m[i].sid = atoi(argv[i*2+2]);
                 m[i].ip = argv[i*2 + 3];
+                ml = list_node_new(&m[i]);
+                list_rpush(mboxList,ml);
         }
 
+        /*
+        list_iterator_t *it = list_iterator_new(mboxList, LIST_HEAD);
+        ml = list_iterator_next(it);
+        while (ml != NULL) {
+                mailbox *a = (mailbox*)ml->val;
+                printf("%d %d %s\n", a->id, a->sid, a->ip);
+                ml = list_iterator_next(it);
+        }
+        */
         num_packets = atoi(argv[num_mailboxes*2+2]);
         filepath =  argv[num_mailboxes*2+3];
 
-        /*
-        for (i=0; i < num_mailboxes; i++) {
-                printf("%d\n", m[i].sid);
-                printf("%s\n", m[i].ip);
-        }
-        */
-        ret = client(m, num_mailboxes);
+        ret = client(mboxList);
 
         printf("client done..\n");
 
