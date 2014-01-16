@@ -107,6 +107,8 @@ int client(list_t *mboxList) {
 	struct sockaddr_sv cliaddr;
         mailbox *m;
 	int ret = 0, i, n, mbox_idx;
+        payload p;
+        list_node_t *ml;
         static size_t total_bytes = 0;
         int stop_sending = 0;
         FILE *f;
@@ -146,12 +148,12 @@ int client(list_t *mboxList) {
                 return -1;
         }
 
-        payload p;
         for (i = 0; i < num_packets; i++) {
                 if (stop_sending)
                         break;
                 mbox_idx = i % mboxList->len;
-                m = (mailbox*)(list_at(mboxList,mbox_idx)->val);
+                ml = list_at(mboxList,mbox_idx);
+                m = (mailbox*)ml->val;
 		printf("client: sending packet %d to service ID %s at mailbox %d %s\n",
                        i, service_id_to_str(&addr[mbox_idx].sv_srvid), m->id, m->ip);
 
@@ -181,7 +183,11 @@ int client(list_t *mboxList) {
                 total_bytes += n;
 
                 //do failure detection here
-                usleep(SLEEP_INTERVAL);
+                //usleep(SLEEP_INTERVAL);
+                ret = doFailureDetection(m->ip);
+                if (ret == -1) {
+                        list_remove(mboxList,ml);
+                }
                                 
         }
 
