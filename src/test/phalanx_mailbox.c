@@ -27,13 +27,27 @@
 #include <signal.h>
 #include <sys/time.h>
 #include "common.h"
+#include "../../list-master/src/list.h"
 
+static list_t *dataPackets;
+static list_t *requests;
 
-int mailbox(int sid) {
+int set_reuse_ok(int soc)
+{
+	int option = 1;
+
+	if (setsockopt(soc, SOL_SOCKET, SO_REUSEADDR,
+                       &option, sizeof(option)) < 0) {
+		fprintf(stderr, "proxy setsockopt error");
+		return -1;
+	}
+	return 0;
+}
+
+int Mailbox(int sid) {
 
         int sock;
         struct sockaddr_sv mboxaddr, cliaddr;
-        static size_t total_bytes = 0;
 
 	socklen_t addrlen = sizeof(cliaddr);
     
@@ -62,6 +76,7 @@ int mailbox(int sid) {
 
         payload p;
         int n;
+        list_node_t *pl;
         while (1) {
 
                 n = recvfrom_sv(sock, &p, sizeof(payload), 0, 
@@ -72,17 +87,22 @@ int mailbox(int sid) {
                         return -1;
                 }
 
+                /*
                 if (n == 0) {
                         fprintf(stderr, "server: received EOF");
                         break;
                 }
+                */
 
-                printf("Received a %zd byte packet number %d from \'%s\' \n", n, p.num, 
+                printf("Received a %zd byte packet number %d type %d from \'%s\' \n", n, p.num, p.type, 
                        service_id_to_str(&cliaddr.sv_srvid));
 
                 //rbuf[n] = '\0';
-                total_bytes += n;
-                
+                if (p.type==DATA) {
+                        pl = list_node_new(&p);
+                        list_rpush(dataPackets,pl);
+                }
+                printf("length of buffer: %d\n", dataPackets->len);
         }
 
         close_sv(sock);
@@ -101,6 +121,9 @@ int main(int argc, char **argv)
         //ips are used for failure detection
 
         int sid = atoi(argv[1]);
-        ret = mailbox(sid);
+
+        dataPackets = list_new();
+        requests = list_new();
+        ret = Mailbox(sid);
         return ret;
 }
