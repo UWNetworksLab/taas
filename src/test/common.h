@@ -19,6 +19,10 @@ int timeval_sub(struct timeval *res, struct timeval *x, struct timeval *y);
 };
 #endif
 
+#define BUF_SIZE (sizeof(char) * 1200)
+#define NUM_PINGS "1"
+#define SLEEP_INTERVAL 100000  //in microseconds
+
 typedef struct 
 {
   int id;
@@ -26,7 +30,7 @@ typedef struct
   char *ip;
 } mailbox;
 
-#define BUF_SIZE (sizeof(char) * 1200)
+
 typedef enum {DATA,REQUEST} packet_type_t;
 
 typedef struct {
