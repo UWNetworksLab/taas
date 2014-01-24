@@ -59,8 +59,8 @@ static int packet_raw_init(struct net_device *dev)
         }
 	addr.sin_port = 0;
 
-        LOG_DBG("binding to %s\n",
-                inet_ntoa(addr.sin_addr));
+        LOG_DBG("binding socket FD %d to %s\n",
+                dev->fd, inet_ntoa(addr.sin_addr));
 
         ret = bind(dev->fd, (struct sockaddr *)&addr, sizeof(addr));
 
@@ -185,7 +185,9 @@ static int packet_raw_xmit(struct sk_buff *skb)
 {
 	struct iphdr *iph = ip_hdr(skb);
 	struct sockaddr_in addr;
+	/* int err, i; */
 	int err;
+        static int outsock = -1;
 
 	memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
@@ -201,7 +203,21 @@ static int packet_raw_xmit(struct sk_buff *skb)
                                   buf, 18));
         }
 #endif
-	err = sendto(skb->dev->fd, skb->data, skb->len, 0, 
+
+        /* printf("Sending %d bytes on FD %d: ", skb->len, skb->dev->fd); */
+        /* for(i = 0; i < skb->len; i++) { */
+        /*         printf("%x ", skb->data[i]); */
+        /* } */
+        /* printf("\n"); */
+
+        if(outsock == -1) {
+                outsock = socket(AF_INET, SOCK_RAW, IPPROTO_SERVAL);
+                assert(outsock != -1);
+        }
+
+	/* err = sendto(skb->dev->fd, skb->data, skb->len, 0,  */
+	/* 	     (struct sockaddr *)&addr, sizeof(addr)); */
+	err = sendto(outsock, skb->data, skb->len, 0, 
 		     (struct sockaddr *)&addr, sizeof(addr));
 
 	if (err == -1) {
