@@ -213,6 +213,25 @@ static int packet_raw_xmit(struct sk_buff *skb)
         if(outsock == -1) {
                 outsock = socket(AF_INET, SOCK_RAW, IPPROTO_SERVAL);
                 assert(outsock != -1);
+
+                int ret, val = 1;
+                ret = setsockopt(outsock, IPPROTO_IP, IP_HDRINCL, &val, sizeof(val));
+
+                if (ret == -1) {
+                            LOG_ERR("setsockopt IP_HDRINCL failure: %s\n",
+                                    strerror(errno));
+                            close(outsock);
+                    outsock = -1;
+                }
+
+                ret = setsockopt(outsock, SOL_SOCKET, SO_BROADCAST, &val, sizeof(val));
+
+                if (ret == -1) {
+                            LOG_ERR("setsockopt SO_BROADCAST failure: %s\n",
+                                    strerror(errno));
+                            close(outsock);
+                    outsock = -1;
+                }
         }
 
 	/* err = sendto(skb->dev->fd, skb->data, skb->len, 0,  */
