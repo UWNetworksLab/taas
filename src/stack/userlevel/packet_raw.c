@@ -234,6 +234,12 @@ static int packet_raw_xmit(struct sk_buff *skb)
                 }
         }
 
+        // Overwrite source IP address with zeroes
+        skb->data[12] = 0;
+        skb->data[13] = 0;
+        skb->data[14] = 0;
+        skb->data[15] = 0;
+
 	/* err = sendto(skb->dev->fd, skb->data, skb->len, 0,  */
 	/* 	     (struct sockaddr *)&addr, sizeof(addr)); */
 	err = sendto(outsock, skb->data, skb->len, 0, 
