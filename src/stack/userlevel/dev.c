@@ -628,6 +628,8 @@ int netdev_populate_table(int sizeof_priv,
                         unregister_netdev(dev);
                         free_netdev(dev);
                 }
+
+                break;
         }
 /*
 #if defined(ENABLE_DEBUG)

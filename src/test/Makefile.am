@@ -21,11 +21,7 @@ bin_PROGRAMS = \
 	udp_taas_server_bgpmux \
 	udp_taas_server_bgpmux_user \
 	taas_service \
-	taas_service_user \
-	phalanx_client \
-	phalanx_mailbox \
-	throughput_client \
-	throughput_server
+	taas_service_user
 
 if HAVE_SSL
 bin_PROGRAMS += \

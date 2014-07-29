@@ -32,15 +32,18 @@ extern int serval_ipv4_rcv(struct sk_buff *skb);
 static int packet_raw_init(struct net_device *dev)
 {
         struct sockaddr_in addr;
-	int ret, val = 1;
+        //	int ret, val = 1;
+        int ret;
 
-	dev->fd = socket(AF_INET, SOCK_RAW, IPPROTO_SERVAL);
+        //	dev->fd = socket(AF_INET, SOCK_RAW, IPPROTO_SERVAL);
+        dev->fd = socket(AF_INET, SOCK_DGRAM, 0);
 
         if (dev->fd == -1) {
                 LOG_ERR("packet socket: %s\n", strerror(errno));
                 return -1;
         }
 
+#if 0
         /* Bind the raw IP socket to the device */
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
@@ -55,12 +58,13 @@ static int packet_raw_init(struct net_device *dev)
                         dev->fd = -1;
                 }
         } else {
+#endif
                 addr.sin_addr.s_addr = INADDR_ANY;
-        }
-	addr.sin_port = 0;
+                //        }
+	addr.sin_port = 9999;
 
-        LOG_DBG("binding socket FD %d to %s\n",
-                dev->fd, inet_ntoa(addr.sin_addr));
+        LOG_DBG("binding socket FD %d to %s, %u\n",
+                dev->fd, inet_ntoa(addr.sin_addr), addr.sin_port);
 
         ret = bind(dev->fd, (struct sockaddr *)&addr, sizeof(addr));
 
@@ -71,6 +75,7 @@ static int packet_raw_init(struct net_device *dev)
 		dev->fd = -1;
         }
 
+#if 0
 	ret = setsockopt(dev->fd, IPPROTO_IP, IP_HDRINCL, &val, sizeof(val));
 
 	if (ret == -1) {
@@ -91,7 +96,7 @@ static int packet_raw_init(struct net_device *dev)
 #if defined(OS_LINUX)
         // Skip binding to eth0 -- doesn't work on Vicci nodes
         if(strcmp(dev->name, "eth0")) {
-                ret = setsockopt(dev->fd, SOL_SOCKET, SO_BINDTODEVICE, 
+                ret = setsockopt(dev->fd, SOL_SOCKET, SO_BINDTODEVICE,
                                  dev->name, strlen(dev->name));
 
                 if (ret == -1) {
@@ -103,6 +108,7 @@ static int packet_raw_init(struct net_device *dev)
         }
 #elif defined(OS_BSD)
         /* TODO: add the BSD equivalent of SO_BINDTODEVICE */
+#endif
 #endif
 
 	return ret;
@@ -136,8 +142,9 @@ static int packet_raw_recv(struct net_device *dev)
                        (struct sockaddr *)&addr, &addrlen);
 	
 	if (ret == -1) {
-		LOG_ERR("recv: %s\n", 
-			strerror(errno));
+               LOG_ERR("recv: %s\n", 
+                      strerror(errno));
+
 		__kfree_skb(skb);
 		return -1;
 	} else if (ret == 0) {
@@ -192,6 +199,7 @@ static int packet_raw_xmit(struct sk_buff *skb)
 	memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
 	memcpy(&addr.sin_addr, &iph->daddr, sizeof(iph->daddr));
+        addr.sin_port = 9999;
 
 #if defined(ENABLE_DEBUG)
         {
@@ -211,9 +219,10 @@ static int packet_raw_xmit(struct sk_buff *skb)
         /* printf("\n"); */
 
         if(outsock == -1) {
-                outsock = socket(AF_INET, SOCK_RAW, IPPROTO_SERVAL);
+                outsock = socket(AF_INET, SOCK_DGRAM, 0);
                 assert(outsock != -1);
 
+#if 0
                 int ret, val = 1;
                 ret = setsockopt(outsock, IPPROTO_IP, IP_HDRINCL, &val, sizeof(val));
 
@@ -232,6 +241,7 @@ static int packet_raw_xmit(struct sk_buff *skb)
                             close(outsock);
                     outsock = -1;
                 }
+#endif
         }
 
         // Overwrite source IP address with zeroes
