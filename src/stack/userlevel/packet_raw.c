@@ -43,7 +43,6 @@ static int packet_raw_init(struct net_device *dev)
                 return -1;
         }
 
-#if 0
         /* Bind the raw IP socket to the device */
         memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
@@ -58,10 +57,9 @@ static int packet_raw_init(struct net_device *dev)
                         dev->fd = -1;
                 }
         } else {
-#endif
                 addr.sin_addr.s_addr = INADDR_ANY;
-                //        }
-	addr.sin_port = 9999;
+                addr.sin_port = 9999;
+        }
 
         LOG_DBG("binding socket FD %d to %s, %u\n",
                 dev->fd, inet_ntoa(addr.sin_addr), addr.sin_port);
