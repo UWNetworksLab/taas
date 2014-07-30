@@ -505,8 +505,8 @@ int netdev_populate_table(int sizeof_priv,
                 len = sizeof(struct ifreq);
 #endif
 
-                if (strncmp(name, "lo", 2) == 0)
-                        continue;
+//                if (strncmp(name, "lo", 2) == 0)
+//                        continue;
 
                 /* If there are white listed interfaces, ignore all
                    interfaces not in the list, except the loopback
