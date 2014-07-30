@@ -197,7 +197,7 @@ static int packet_raw_xmit(struct sk_buff *skb)
 	memset(&addr, 0, sizeof(addr));
         addr.sin_family = AF_INET;
 	memcpy(&addr.sin_addr, &iph->daddr, sizeof(iph->daddr));
-        addr.sin_port = htons(9999);
+        addr.sin_port = 9999;
 
 #if defined(ENABLE_DEBUG)
         {

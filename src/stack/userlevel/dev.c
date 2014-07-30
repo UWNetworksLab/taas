@@ -152,7 +152,7 @@ struct net_device *resolve_dev_impl(const struct in_addr *addr,
                                 read_unlock(&dev_base_lock);
                                 return dev;
                         }
-                        if (!best_guess_dev && strcmp(dev->name, "lo") != 0)
+                        if (!best_guess_dev /* && strcmp(dev->name, "lo") != 0 */)
                                 best_guess_dev = dev;
                 }
         }
